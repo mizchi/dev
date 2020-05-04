@@ -4,6 +4,16 @@ body {
   padding: 0;
   width: 100%;
 }
+
+html {
+  background: #333;
+}
+
 .markdown-body {
   min-height: 50vh;
+}
+
+.markdown-body pre {
+  background: rgb(155, 45, 45);
+  color: white;
 }
