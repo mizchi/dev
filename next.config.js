@@ -3,7 +3,15 @@ module.exports = {
     config.resolve.extensions.push(".mdx");
     config.module.rules.push({
       test: /\.mdx?/,
-      loader: "mdxx-loader/lib/amp",
+      // loader: "mdxx-loader/lib/amp",
+      use: [
+        {
+          loader: "mdxx-loader",
+          options: {
+            amp: true,
+          },
+        },
+      ],
     });
     return config;
   },

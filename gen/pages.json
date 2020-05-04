@@ -1,18 +1,11 @@
 [
   {
-    "title": "なぜ仮想DOMという概念が俺達の魂を震えさせるのか",
-    "created": 1588531413311,
-    "amp": true,
-    "slug": "202005040322"
-  },
-  {
     "title": "foo",
-    "created": 1588532555962,
-    "amp": false,
+    "created": 1588588814608,
     "slug": "foo"
   },
   {
-    "title": "helloworld",
+    "title": "Hello, mdxx-ssg",
     "created": 1588585977921,
     "amp": true,
     "slug": "helloworld"

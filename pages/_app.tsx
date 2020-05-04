@@ -1,31 +1,17 @@
-import "../styles/github-markdown.css";
-import "../styles/prism.css";
+// import "../styles/github-markdown.css";
+// import "../styles/prism.css";
 
 import Head from "next/head";
 export default function MyApp({ Component, pageProps }) {
   return (
     <>
-      {/* <GithubMardownStyle /> */}
-      <PrismjsHighlighter />
-      <CustomCss />
-      <div
-        style={{
-          width: "100%",
-          paddingLeft: 10,
-          paddingRight: 10,
-          paddingTop: 15,
-          maxWidth: "100%",
-        }}
-      >
-        <div
-          style={{
-            margin: "0 auto",
-            maxWidth: "960px",
-          }}
-        >
-          <Component {...pageProps} />
-        </div>
-      </div>
+      <Head>
+        <CustomCss />
+        <GithubMardownStyle />
+        <PrismjsHighlighter />
+      </Head>
+
+      <Component {...pageProps} />
     </>
   );
 }
@@ -40,9 +26,8 @@ const CustomCss = () => {
           padding: 0;
           width: 100%;
         }
-        .markdown-body pre {
-          color: white;
-          background: #333;
+        .markdown-body {
+          min-height: 50vh;
         }
       `}</style>
     </Head>
@@ -53,6 +38,11 @@ const PrismjsHighlighter = () => {
   return (
     <Head>
       <style global jsx>{`
+        .markdown-body pre {
+          color: white;
+          background: #333;
+        }
+
         /**
  * a11y-dark theme for JavaScript, CSS, and HTML
  * Based on the okaidia theme: https://github.com/PrismJS/prism/blob/gh-pages/themes/prism-okaidia.css
