@@ -18,9 +18,9 @@ export function Layout(props: { children: React.ReactNode }) {
           }}
         >
           <main style={{ minHeight: "50vh" }}>{props.children}</main>
-          <Footer />
         </div>
       </div>
+      <Footer />
     </>
   );
 }
@@ -51,7 +51,7 @@ function Footer() {
     <>
       <hr />
 
-      <footer style={{ paddingBottom: 20 }}>
+      <footer style={{ paddingBottom: 20, paddingLeft: 10 }}>
         <p>
           created by <a href="https://github.com/mizchi/mdxx">mdxx-ssg</a>
         </p>

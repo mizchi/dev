@@ -26,6 +26,7 @@ export function ItemLayout(props: {
           </p>
           {props.children}
         </div>
+
         <div>
           <TwitterShare />
           <FacebookShare />
