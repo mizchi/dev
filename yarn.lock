@@ -4048,25 +4048,25 @@ mdurl@^1.0.0:
   resolved "https://registry.yarnpkg.com/mdurl/-/mdurl-1.0.1.tgz#fe85b2ec75a59037f2adfec100fd6c601761152e"
   integrity sha1-/oWy7HWlkDfyrf7BAP1sYBdhFS4=
 
-mdxx-compiler@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/mdxx-compiler/-/mdxx-compiler-0.4.0.tgz#72b71360d925ad7674986b396ea68f2ec9b0f632"
-  integrity sha512-OFi3x5h9zn5JZPulmzB8rhvXcMEt9PNlMPAh5H+8e91xGVFjjEB7opCxSsZgfDaS/yuqAWV3ST9X3rMDUsqAUQ==
+mdxx-compiler@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/mdxx-compiler/-/mdxx-compiler-0.4.1.tgz#668c2b7411cf7ee65cab888eaf5d52573242c774"
+  integrity sha512-VJu8beEMVRjzrzYnew+26fH7H6KlDyCs3hB/SjxCS2XOAZXZ0caoQl0i1Q0vRokj7qXB4tzw7Dx03Mhj9vRiTQ==
   dependencies:
     mdxx-types "^0.4.0"
 
-mdxx-loader@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/mdxx-loader/-/mdxx-loader-0.4.0.tgz#ec3ee2b7396d041e3c890456ad48656847855ff0"
-  integrity sha512-0nARw9M3TrEnmyfEcgEQqWF20AcGrH3vuiy27s1s+V94ygHPyEM54bJLXK5pfXkoDyTO4mF3KPsyTi99Pb3LbQ==
+mdxx-loader@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/mdxx-loader/-/mdxx-loader-0.4.1.tgz#b6395a50a6afa3ef358d3b7484c66f3aec9be8fa"
+  integrity sha512-WP8K2IrG2IKq091FD/zft2W7s21nYk5luiAlChAft7uQC00gU5CPXWnGzIYanMlfi+yj7uWJdOxh0DzUihoahA==
   dependencies:
-    mdxx-compiler "^0.4.0"
-    mdxx-parser "^0.4.0"
+    mdxx-compiler "^0.4.1"
+    mdxx-parser "^0.4.1"
 
-mdxx-parser@0.4.0, mdxx-parser@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/mdxx-parser/-/mdxx-parser-0.4.0.tgz#0bda9d849cd52f0c94dad0fbfd4abfc78ed8be41"
-  integrity sha512-+yHqysVxKqcCvV+KCOVbaQuMndkZCrv48DoMR+iPr0WCKzjeFMx0dlPFUnm/RRHQWHsZnjFIzBflrQ7u3MQGYA==
+mdxx-parser@0.4.1, mdxx-parser@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/mdxx-parser/-/mdxx-parser-0.4.1.tgz#c26fba1723b9a63266821d13f3717fd17c4f9fc2"
+  integrity sha512-x/3ZP/bTBdeRpZneS6/lce1vj+Iaisk3b02PNY40N4A2SxB+tJz1xzXF0KmJEH4pl3MbLMFXZpI3xYRopmFk0g==
   dependencies:
     "@babel/core" "^7.8.4"
     "@babel/plugin-syntax-jsx" "^7.8.3"

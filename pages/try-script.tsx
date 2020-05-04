@@ -1,6 +1,10 @@
 import { Layout } from "../components/Layout";
 import { AmpScript } from "../components/AmpScript";
 
+export const config = {
+  amp: true,
+};
+
 export default () => {
   const host =
     process.env.NODE_ENV === "production"

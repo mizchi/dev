@@ -39,7 +39,7 @@ export const config = {
 
 export default () => (
   <ItemLayout {...newProps}>
-    <Doc />
+    <Doc amp />
   </ItemLayout>
 );
 `
