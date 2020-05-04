@@ -1,9 +1,10 @@
 import Head from "next/head";
-export const config = { amp: true };
 import pages from "../gen/pages.json";
 import ssgConfig from "../mdxx-ssg.json";
 import format from "date-fns/format";
-import { Layout } from "../components/layout";
+import { Layout } from "../components/Layout";
+
+export const config = { amp: true };
 
 export default () => {
   return (

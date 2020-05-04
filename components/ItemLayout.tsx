@@ -1,4 +1,4 @@
-import { Layout } from "./layout";
+import { Layout } from "./Layout";
 import Head from "next/head";
 import ssgConfig from "../mdxx-ssg.json";
 import { AmpIncludeAmpAnalytics, AmpIncludeAmpSocialShare } from "./amp";
@@ -30,7 +30,7 @@ export function ItemLayout(props: {
         <div>
           <TwitterShare />
           <FacebookShare />
-          <LineShare />
+          {/* <LineShare /> */}
         </div>
       </Layout>
     </>
