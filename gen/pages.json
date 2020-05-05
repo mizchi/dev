@@ -8,5 +8,10 @@
     "title": "Hello, mdxx-ssg",
     "created": 1588585977921,
     "slug": "helloworld"
+  },
+  {
+    "title": "MDX eXtended = MDXX | AMP対応 Markdown Compiler と静的サイトジェネレーター",
+    "created": 1588688918620,
+    "slug": "mdxx-introduction"
   }
 ]

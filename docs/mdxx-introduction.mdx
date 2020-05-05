@@ -1,0 +1,102 @@
+---
+title: MDX eXtended = MDXX | AMP対応 Markdown Compiler と静的サイトジェネレーター
+created: 1588688918620
+---
+
+というツールを紹介します。
+
+GitHub はここ [mizchi/mdxx](https://github.com/mizchi/mdxx)
+
+このサイト自体も、 [mdxx-ssg](https://github.com/mizchi/mdxx/tree/master/packages/ssg) というツールで作られています。
+
+## ゴールをどこに設定したか
+
+- パフォーマンスを突き詰めると、ブログは静的サイトジェネレータで AMP 対応するのが一番と考えた
+- next.js/SSG export + AMP が便利だったので、next.js 上でコンパイルすることを前提に、静的解析を行う webpack loader を作ることにした
+- mdx の parser を借りて、 `.mdx` をロードすると React Component として振る舞いつつ、他の `mdx` を import できると、長い文章を書くときにファイル分割できて便利なのでは
+- Markdown プレビュー高速化+ランタイム最小化のために、AST(JSON) 生成する部分と、AST からの実行処理部分を分割した
+- 基本は Full AMP で、React Component 動くページを作れる余地も残したい
+
+## 何を作ったか/mdxx とはなにか
+
+- remark ベースで React Component を出力する parser / compiler / cli / next.js template
+- AMP 対応: img は `amp-img` を吐くなど
+- yaml frontmatter 対応
+- Code Syntax Highlight 対応: prismjs で静的解析をするので、CSS のみでランタイム不要
+- ToC 対応
+
+基本は mdx をベースに、高速化+静的解析で最適化+AMP 対応+周辺ツールという感じ
+
+## 周辺ツール: npm packages
+
+- mdxx-loader: webpack loader
+- rollup-plugin-mdxx: rollup
+- mdxx-cli: コマンドラインで mdx をコンパイルできる CLI ツール
+
+## 周辺ツール mdxx-ssg
+
+このブログ自身がサンプルなのですが、自分自身のサイトを作ることもできます。
+
+こんな感じ。
+
+```bash
+# install node and npm
+npx degit mizchi/mdxx/packages/ssg blog
+cd blog
+npm install
+cp mdxx-ssg.json.example mdxx-ssg.json
+# edit mdxx-ssg.json for you
+
+# create new page
+npm run new-page
+# edit docs/[current-date].mdx
+
+# create new page with slug
+npm run new-page foo
+# edit docs/foo.mdx
+
+# Preview
+npm run dev
+
+# Deploy
+npm run build
+```
+
+netlify や github pages や firebase hosting を想定しています。
+
+netlify にデプロイする例。
+
+```
+netlify deploy -d out --prod
+```
+
+まだ色々と手抜きで、かつ頻繁に更新しているので、使いたい人は PR or 自分で CSS 書くなどしてください。
+
+## 現在のステータス
+
+- ドキュメントが足りてない
+- SSG といいつつ、ただの愚直な next.js プリセットという感じ。コンポーネント化+ちゃんとしたデザインをする
+
+## TODO
+
+- [ ] カスタムな Remark Plugin を読み込む口を開ける
+- [ ] amp-script 対応: AMP 内でバンドルした js を生成して、worker-dom で動かす
+- [ ] amp-mathml: 非 AMP 環境向けでは KaTex で対応しているが、amp 時は amp-mathml に切り替える
+- [ ] https://mdbuf.netlify.com/ で使うコンパイラを mdxx にする
+- [ ] commit log から history pages を作成し、かつ GitHub の PR を作れる機能を作りたい(fork せずにできるのか？)
+
+## mdxx はどういう用途を想定しているか
+
+## 余談: mdx ではだめだったのか
+
+https://github.com/mdx-js/mdx/tree/master/packages/mdx を読んだ限りは、拡張しづらく、自分の用途に合いませんでした。
+
+- remark の parse と complile(stringify) を分離できない
+- [mdbuf](https://mdbuf.netlify.com/) を作った経験だと、 React Element は worker で渡せないので、pure json な AST を作る必要がある
+- がっつり拡張するなら mdxx が良さそうだった
+
+## おわり
+
+買っておいた秘蔵の `https://mizchi.dev` を netlify から繋いで、今後も自分のブログとしてドッグフーディングしつつ作っていきます。
+
+機能要望などあったら、[GitHub の Issue](https://github.com/mizchi/mdxx/issues) か [@mizchi](https://twitter.com/mizchi) まで Twitter でお知らせください。

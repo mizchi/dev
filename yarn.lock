@@ -4131,14 +4131,14 @@ mdurl@^1.0.0:
   resolved "https://registry.yarnpkg.com/mdurl/-/mdurl-1.0.1.tgz#fe85b2ec75a59037f2adfec100fd6c601761152e"
   integrity sha1-/oWy7HWlkDfyrf7BAP1sYBdhFS4=
 
-mdxx-compiler@^0.4.1:
+mdxx-compiler@^0.4.1, mdxx-compiler@^0.4.2:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/mdxx-compiler/-/mdxx-compiler-0.4.1.tgz#668c2b7411cf7ee65cab888eaf5d52573242c774"
   integrity sha512-VJu8beEMVRjzrzYnew+26fH7H6KlDyCs3hB/SjxCS2XOAZXZ0caoQl0i1Q0vRokj7qXB4tzw7Dx03Mhj9vRiTQ==
   dependencies:
     mdxx-types "^0.4.0"
 
-mdxx-loader@^0.4.1:
+mdxx-loader@^0.4.2:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/mdxx-loader/-/mdxx-loader-0.4.1.tgz#b6395a50a6afa3ef358d3b7484c66f3aec9be8fa"
   integrity sha512-WP8K2IrG2IKq091FD/zft2W7s21nYk5luiAlChAft7uQC00gU5CPXWnGzIYanMlfi+yj7uWJdOxh0DzUihoahA==
@@ -4146,7 +4146,7 @@ mdxx-loader@^0.4.1:
     mdxx-compiler "^0.4.1"
     mdxx-parser "^0.4.1"
 
-mdxx-parser@0.4.1, mdxx-parser@^0.4.1:
+mdxx-parser@0.4.2, mdxx-parser@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/mdxx-parser/-/mdxx-parser-0.4.1.tgz#c26fba1723b9a63266821d13f3717fd17c4f9fc2"
   integrity sha512-x/3ZP/bTBdeRpZneS6/lce1vj+Iaisk3b02PNY40N4A2SxB+tJz1xzXF0KmJEH4pl3MbLMFXZpI3xYRopmFk0g==
@@ -5307,7 +5307,7 @@ randomfill@^1.0.3:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
 
-raw-loader@^4.0.1:
+raw-loader@^4.0.2:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/raw-loader/-/raw-loader-4.0.1.tgz#14e1f726a359b68437e183d5a5b7d33a3eba6933"
   integrity sha512-baolhQBSi3iNh1cglJjA0mYzga+wePk7vdEX//1dTFd+v4TsQlQE0jitJSNF1OIP82rdYulH7otaVmdlDaJ64A==
