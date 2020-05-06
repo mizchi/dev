@@ -16,17 +16,19 @@ export default class MyDocument extends Document {
         sheet.collectStyles(<App {...props} />)
       );
       const initialProps: any = await Document.getInitialProps(ctx);
+      const styles = [
+        ...initialProps.styles,
+        <style
+          key="custom"
+          dangerouslySetInnerHTML={{
+            __html: `${css}\n${prismCss}\n${custom}`,
+          }}
+        />,
+        ...sheet.getStyleElement(),
+      ];
       return {
         ...page,
-        styles: [
-          ...initialProps.styles,
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `${css}\n${prismCss}\n${custom}`,
-            }}
-          />,
-          ...sheet.getStyleElement(),
-        ],
+        styles,
       };
     } finally {
       sheet.seal();

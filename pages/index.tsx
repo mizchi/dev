@@ -4,6 +4,8 @@ import ssgConfig from "../mdxx-ssg.json";
 import format from "date-fns/format";
 import { Layout } from "../components/Layout";
 
+import sortBy from "lodash.sortby";
+
 export const config = { amp: true };
 
 export default () => {
@@ -14,14 +16,14 @@ export default () => {
       </Head>
       <Layout>
         <div>
-          {pages.map((page, index) => {
+          {sortBy(pages, (p) => -p.created).map((page, index) => {
             // @ts-ignore
             const formatted = format(
               page.created as number,
               "yyyy/MM/dd/HH:mm"
             );
             return (
-              <div key={index}>
+              <div key={index} style={{ paddingTop: 10 }}>
                 <span>{formatted}</span>:&nbsp;
                 <a href={"/" + page.slug}>{page.title}</a>
               </div>
