@@ -53,7 +53,7 @@ function HatenaBookmarkShare() {
     // @ts-ignore
     // prettier-ignore
     // <amp-social-share type="hatena_bookmark" layout="container" data-share-endpoint="http://b.hatena.ne.jp/entry/CANONICAL_URL">B!</amp-social-share>
-    <amp-social-share type="hatena_bookmark" layout="container" data-share-endpoint="http://b.hatena.ne.jp/entry/CANONICAL_URL" />
+    <amp-social-share type="hatena_bookmark" data-share-endpoint="http://b.hatena.ne.jp/entry/CANONICAL_URL" />
   );
 }
 

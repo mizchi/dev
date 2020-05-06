@@ -86,18 +86,20 @@ const HeaderContainer = styled.header`
   width: 100%;
   background: #333;
   display: flex;
-  justify-content: start;
+  align-items: center;
+  /* justify-content: start; */
 `;
 
 const HeaderInner = styled.div`
-  min-width: 480px;
-  width: 600px;
-  max-height: 960px;
-  padding-left: 1px;
+  /* min-width: 400px; */
+  width: 400px;
+  padding-left: 80px;
+  /* max-height: 960px; */
+  /* padding-left: 1px; */
   /* padding-top: 8px; */
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* justify-content: center; */
 `;
 
 const MainContainer = styled.div`
