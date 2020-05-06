@@ -1,0 +1,313 @@
+---
+title: next.js の AMP mode を使って静的サイトを作る
+created: 1588760362771
+---
+
+この記事は mdxx-ssg を作りながら, next.js で AMP に対応したときにやったことです。
+
+コードはこちらです [mdxx/packages/ssg at master · mizchi/mdxx](https://github.com/mizchi/mdxx/tree/master/packages/ssg)
+
+## AMP について
+
+Google の推奨する HTML のサブセット仕様です。制約付きのインライン CSS のみ + 一切の JS が書けず、代わりに動きがあるものは amp plugin を使って記述します。
+
+モバイルでは、Google の検索結果画面からは GoogleCDN 上のキャッシュが返却されるので、非常に高速に開くことができます。
+
+![](https://i.gyazo.com/981b2a38f960a1f59bf6efc9ee958865.gif)
+
+(⚡ マークが AMP 対応の印)
+
+モバイルに限らず、ある種のベストプラクティスの強制なので、PC でも AMP 対応することに意味はあります。
+
+![](https://i.gyazo.com/a2e766240b47afd28c0ed7bbebc5d14d.png)
+
+この記事では、実際にこのブログのための SSG を作る過程で、どのように next.js 上で AMP に対応していったかを説明します。
+
+この記事、このブログ自体が動作サンプルとなっています。
+
+## next.js を採用した理由
+
+まず `pages/*.tsx` を置くだけでパス指定になるという規約が使いやすく、静的サイトの土台としては十分です。場合によっては、サーバーで動的に動かすようにもできます。フロントエンドエンジニアは React の作例なんかを置きたかったりしますよね。
+
+静的サイトジェネレータ(SSG)としては、`next build && next export` で、スタンドアロンな静的サイトを生成できる、というのが大きいです。この静的サイト生成で Full AMP として AMP ページを生成しています
+
+## 準備
+
+Chrome 拡張として AMP Validator をインストールしてください。
+
+[AMP Validator \- Chrome ウェブストア](https://chrome.google.com/webstore/detail/amp-validator/nmoffdblmcmgeicmolmhobpoocbbmknc?hl=ja)
+
+この Chrome 拡張の ⚡ が緑になっていれば、それは AMP として Valid なウェブサイトです。
+
+![](https://gyazo.com/05a35deab400437304d719ee8a037c86.png)
+
+注意点として、 next.js の AMP 有効時は、必ず 1 件はエラーとなります。これは正常です。
+
+![](https://gyazo.com/646b01151023c793f494b3b4b10315fb.png)
+
+なにかエラーが出たときは、 開発モードでこれが 1 件 になるまでエラーを潰す、という感じになります。出力時に 0 件になります。
+
+## next.js の AMP mode を使う。
+
+next.js で AMP を使うだけなら非常にシンプルです。
+
+```
+pages/index.tsx # 最新の next は ts にデフォルトで対応している
+pages/index.tsx # /foo
+
+package.json # dependencies に next を含む
+```
+
+いつもの next.js のボイラープレートです。これで `yarn next` すると開発用サーバーが立ち上がります。
+
+### Full AMP
+
+常に AMP で生成するのを Full AMP といいます。このとき、 次のように `amp: true` を指定します。
+
+```js
+// pages/index.tsx
+
+export const config = {
+  amp: true,
+};
+
+export default () => {
+  return <div>index</div>;
+};
+```
+
+このとき、 AMP は静的ページなので、React は SSR のみ行われます。次のような hooks は実行されません。
+
+```js
+import React, { useEffect } from "react";
+export const config = {
+  amp: true,
+};
+export default () => {
+  useEffect(() => {
+    console.log("ここは AMP mode では実行されない");
+  }, []);
+  return <div>index</div>;
+};
+```
+
+内部的には、 AMP ではオリジナルな記事への canonical の指定を行いますが、 Full AMP では常に自分自身を指します。
+
+[ページが検出されるようにする \- amp\.dev](https://amp.dev/ja/documentation/guides-and-tutorials/optimize-and-measure/discovery/)
+
+mdxx-ssg での記事のボイラープレートでは、Full AMP を採用していますが、必要に応じて通常ページのレンダリングもできるようにしています。
+
+### Hybrid AMP
+
+mdxx-ssg では採用してませんが、 next.js ではモバイルと Google へのインデックスのために AMP を生成しつつ、PC 用には通常の AMP のレンダリングを行うモードがあります。こっちのほうが一般的な AMP かも。
+
+```js
+// pages/index.tsx
+
+export const config = {
+  amp: "hybrid",
+};
+
+export default () => {
+  return <div>index</div>;
+};
+```
+
+hybrid mode 時、どちらのコンテキストで生成するかで処理を切り替える場合、`useAmp()` で処理を切り替えます。
+
+```js
+import { useAmp } from "next/amp";
+export const config = {
+  amp: "hybrid",
+};
+
+export default () => {
+  const isAmp = useAmp();
+  return <div>index: {isAmp ? "amp" : "normal"}</div>;
+};
+```
+
+## CSS と styled-components 対応
+
+ベースとなる CSS は [github\-markdown\-css/github\-markdown\.css at gh\-pages · sindresorhus/github\-markdown\-css](https://github.com/sindresorhus/github-markdown-css/blob/gh-pages/github-markdown.css) を採用しているのですが、 AMP 環境では `!import` がエラーになります。なので、そのまま使うのではなく `!import` を除去した CSS を用意しました。
+
+next.js で SSR の土台となる `pages/_document.tsx` で、webpack の raw-loader で CSS を文字列として読み込んで、この CSS を注入します。 (要: `yarn add raw-loader -D`)
+
+ついでに styled-components の Hydration も行っています。
+
+```tsx
+import Document, { Html, Head, Main, NextScript } from "next/document";
+// @ts-ignore
+import css from "!!raw-loader!../styles/github-markdown.css";
+// @ts-ignore
+import prismCss from "!!raw-loader!../styles/prism.css";
+// @ts-ignore
+import custom from "!!raw-loader!../styles/styles.css";
+import { ServerStyleSheet } from "styled-components";
+import ssgConfig from "../mdxx-ssg.json";
+
+export default class MyDocument extends Document {
+  static async getInitialProps(ctx: any) {
+    const sheet = new ServerStyleSheet();
+    try {
+      const page = ctx.renderPage((App) => (props) =>
+        sheet.collectStyles(<App {...props} />)
+      );
+      const initialProps: any = await Document.getInitialProps(ctx);
+      const styles = [
+        ...initialProps.styles,
+        <style
+          key="custom"
+          dangerouslySetInnerHTML={{
+            __html: `${css}\n${prismCss}\n${custom}`,
+          }}
+        />,
+        ...sheet.getStyleElement(),
+      ];
+      return {
+        ...page,
+        styles,
+      };
+    } finally {
+      sheet.seal();
+    }
+  }
+
+  render() {
+    return (
+      <Html lang={ssgConfig.lang || "en-US"}>
+        <Head />
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+```
+
+これらの CSS は、 amp の CSS 制約を満たすように、 `<style amp-custom>...</style>` と一つの CSS タグで展開されます。
+
+## Google Analytics 対応
+
+amp-analytics を使います。
+
+[AMP ページにアナリティクスを追加する  \|  AMP ページ向けアナリティクス  \|  Google Developers](https://developers.google.com/analytics/devguides/collection/amp-analytics?hl=ja)
+
+Google Analytics 側で新しいサービスを登録し、発行された埋め込みタグの gtag_id だけ抜き出しておきます。
+
+```
+// components/ItemLayout.tsx
+
+function Analytics() {
+  const json = JSON.stringify({
+    vars: {
+      gtag_id: "[your-gtag-id]",
+      config: {
+        "[your-gtag-id]": { groups: "default" },
+      },
+    },
+  });
+  return (
+    // @ts-ignore
+    // prettier-ignore
+    <amp-analytics type="gtag" data-credentials="include"><script type="application/json" dangerouslySetInnerHTML={{ __html: json }} /></amp-analytics>
+  );
+}
+```
+
+ここは色々ややこしいので、 [dev/ItemLayout\.tsx at master · mizchi/dev](https://github.com/mizchi/dev/blob/master/components/ItemLayout.tsx) を見たほうが早いと思います。
+
+## AMP Script 対応
+
+amp では 普通の JS を動かすことはできませんが、 WebWorker 環境に指定要素の DOM の仮想的なオブジェクトを生成して、それを操作することで、DOM に反映させる、という worker-dom を使うことができます。
+
+[この DOM がすごい 2018: worker\-dom \- mizchi's blog](https://mizchi.hatenablog.com/entry/2018/10/18/155448)
+
+[Google Developers Japan: amp\-script: AMP ❤️ JS](https://developers-jp.googleblog.com/2019/10/amp-script-amp-js.html)
+
+[AMP で任意の JS を実行できる amp\-script を試してみた \- Qiita](https://qiita.com/mizchi/items/c7d648eafb03d4c5378a)
+
+mdxx-ssg では、これを next.js+webpack と連携してシームレスに組み込める仕組みを、なにか用意しようと考えています。
+
+今はこういう PR を出しています。
+
+[\[RFC\] Add npm library mode by mizchi · Pull Request \#855 · ampproject/worker\-dom](https://github.com/ampproject/worker-dom/pull/855)
+
+## mdxx でやったこと
+
+### mdxx-parser での code syntax highlighter の実装
+
+amp 制約下では、JS が実行できないので、プログラミング言語のランタイムでの構文解析を実行することはできません。なので、markdown のコードブロックの中身を、事前にトークンに落とすところまで行っています。
+
+[mdxx/highlighter\.ts at master · mizchi/mdxx](https://github.com/mizchi/mdxx/blob/master/packages/parser/src/highlighter.ts)
+
+パース後は言語非依存のトークンに変換されているので、あとは CSS を当てるだけです。
+
+https://github.com/PrismJS/prism-themes/tree/master/themes
+
+### mdxx-compiler での amp-img 対応
+
+amp ではレイアウト最適化のために img を直接使うのではなく、 `amp-img` を使う必要があります。
+
+mdxx-ssg 用の mdxx-compiler では、AMP フラグを付けると、 `![alt](imglink)` の link 構文を、次のようなコードと HTML 要素に変換します。
+
+こういう alt を使った構文を想定
+
+```
+## doc.mdx
+
+![text:500](...)
+```
+
+展開コード
+
+```tsx
+import Doc from "./doc.mdx"; // mdxx-loader で変換される
+<Doc amp />; // AMP フラグを立てると img を amp-img に変換する
+```
+
+変換後の生成コード
+
+```tsx
+// height はインライン要素で指定する
+<div className="amp-img-container" style={{ height: "500px" }}>
+  <amp-img layout="fill" src="..." />
+</div>
+```
+
+```css
+.amp-img-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+}
+
+.amp-img-container amp-img img {
+  object-fit: contain;
+  background: #eee;
+}
+```
+
+これで指定の高さで width: 100% でレスポンシブに拡大される画像要素とすることができます。
+
+## Deploy
+
+- `docs/*.mdx` の frontmatter を収集した json を生成して `gen/pages.json` を生成
+- next build
+- next export
+- netlify deploy -d out --prod
+
+このサイトは、 netlify のドメイン紐付け機能で、 google domains で買った mizchi.dev を繋げています。
+この辺は別途記事にします。
+
+## 感想
+
+next.js はとても汎用的なフレームワークですが、 amp 対応の静的サイトの土台にも適しています。
+
+getStaticProps や getStaticPaths を使うとまた難しくなってくるのですが、素朴に使う限りは簡単でした。
+
+ただし、用意されてるもの以外のツールチェインは無いので、自分で AMP の Issue を調べたり、React や JS で実装しきる基礎力は要求されます。ライブラリも amp plugin 以外は存在しないと思って良いです。
+
+`docs/*.mdx` にファイルをおいてコマンドを叩いたらデプロイされる、というところまでは作りきったんですが、見えてるものが多すぎて混乱を招くので、静的サイトジェネレータとしてはもうちょっと設計を練りたい感じですね。

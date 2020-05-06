@@ -13,5 +13,10 @@
     "title": "MDX eXtended = MDXX | AMP対応 Markdown Compiler と静的サイトジェネレーター",
     "created": 1588688918620,
     "slug": "mdxx-introduction"
+  },
+  {
+    "title": "next.js の AMP mode を使って静的サイトを作る",
+    "created": 1588760362771,
+    "slug": "study-next-amp-by-mdxx-ssg"
   }
 ]
