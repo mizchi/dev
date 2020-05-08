@@ -1,34 +1,28 @@
 {
-  "name": "mdxx-ssg",
-  "version": "0.4.0",
   "private": true,
   "license": "MIT",
   "scripts": {
-    "new-page": "node scripts/new-page.js",
-    "create-index": "node scripts/create-index.js",
-    "build": "node scripts/create-index && next build && next export",
-    "dev": "npm run create-index && next"
+    "build": "mdxx-ssg build && next build && next export",
+    "dev": "mdxx-ssg build && next"
   },
   "dependencies": {
     "date-fns": "^2.12.0",
-    "github-slugger": "^1.3.0",
-    "lodash-es": "^4.17.15",
-    "lodash.sortby": "^4.7.0",
-    "mdxx-parser": "0.4.1",
+    "mdxx-compiler": "^0.4.8",
+    "mdxx-loader": "^0.4.8",
+    "mdxx-parser": "^0.4.8",
+    "mdxx-ssg-components": "^0.4.13",
     "next": "^9.3.6",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "styled-components": "^5.1.0"
   },
   "devDependencies": {
-    "@types/lodash-es": "^4.17.3",
     "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.7",
     "@types/styled-components": "^5.1.0",
-    "mdxx-compiler": "^0.4.4",
-    "mdxx-loader": "0.4.4",
+    "mdxx-ssg-cli": "^0.4.15",
     "raw-loader": "^4.0.1",
-    "ts-node": "^8.10.1",
+    "rimraf": "^3.0.2",
     "typescript": "^3.8.3"
   }
 }

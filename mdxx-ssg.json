@@ -3,5 +3,11 @@
   "author": "mizchi",
   "authorLink": "https://twitter.com/mizchi",
   "lang": "ja",
-  "GA-UA": "UA-165420141-1"
+  "gtag": "UA-165420141-1",
+  "repository": "mizchi/mdxx",
+  "socialShare": {
+    "twitter": true,
+    "hatena": true,
+    "facebook": true
+  }
 }

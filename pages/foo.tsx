@@ -2,16 +2,16 @@
 // @ts-ignore
 import Doc, { frontmatter } from "../docs/foo.mdx";
 import ssgConfig from "../mdxx-ssg.json";
-import { ItemLayout } from "../components/ItemLayout";
-
-const newProps = { ...ssgConfig, ...frontmatter } as any;
+import { Layout, Article } from "mdxx-ssg-components";
 
 export const config = {
   amp: true,
 };
 
 export default () => (
-  <ItemLayout {...newProps}>
-    <Doc />
-  </ItemLayout>
+  <Layout ssgConfig={ssgConfig}>
+    <Article ssgConfig={ssgConfig} title={frontmatter.title}>
+      <Doc amp />
+    </Article>
+  </Layout>
 );
