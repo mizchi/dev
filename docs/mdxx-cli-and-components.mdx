@@ -1,0 +1,65 @@
+---
+title: mdxx-ssg@0.5.0 - mdxx-ssg-cli & mdxx-components
+created: 1588952818281
+---
+
+## ChangeLog
+
+- mdxx-parser
+  - `$$ ~ $$` の数式ブロックを amp-mathml に変換
+- mdxx-ssg-components
+  - `mdxx-ssg` は現状単なるボイラープレートだが、設定が最小で済むように `Layout` `Article` などに抽出
+  - [amp-social-share で、はてなブックマークに対応](/amp-social-share-for-hatena-bookmark)
+- mdxx-ssg-cli: CLI ツール
+  - 記事一覧の生成 (`gen/pages.json`)
+  - 記事のヒストリーの生成 (`gen/*.history.json`)
+
+## mdxx-ssg-cli のインストール
+
+```bash
+npm install -g mdxx-ssg-cli
+```
+
+## mdxx-ssg new
+
+WIP
+
+## new feature: 新規記事の作成
+
+```
+mdxx-ssg new:page [foo]
+```
+
+## new feature: インデックスの記事一覧とヒストリーの生成
+
+```
+mdxx-ssg build:index
+```
+
+`docs` ディレクトリの記事一覧から、`gen/pages.json` を生成する。
+
+```
+mdxx-ssg build:history
+```
+
+`docs/*.mdx` の git コミットログから変更ヒストリーを生成する。
+
+```tsx
+import history from "../gen/pages/foo.history.json";
+import { History } from "mdxx-ssg-components";
+
+<History history={history} />;
+```
+
+mdxx-ssg.json で、もし `"repository": "mizchi/mdxx"` のように GitHub のリポジトリを指定していると、そのコミットへのリンクになる。
+
+## TODO
+
+- `pages/sitemap.xml`: sitemap 対応
+- `pages/feed.rss`: feed 対応
+- `mdxx-ssg new your-blog`: 最新版から scaffold できるようにする
+- `mdxx-ssg new:page` 時、記事生成のテンプレート化できるようにする対応
+- `mdxx-ssg-components`: `Layout` を使わない、カスタマイズ度が高い作例を用意する
+- frontmatter のタグ一覧対応
+- mdxx-ssg を github actions でデプロイできるようにしておく
+- mdxx preview の vscode extension
