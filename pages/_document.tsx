@@ -41,6 +41,7 @@ export default class MyDocument extends Document {
       <Html lang={ssgConfig.lang || "en-US"}>
         <Head>
           <link rel="manifest" href="/manifest.json" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png"></link>
           <meta name="theme-color" content="#317EFB" />
           <link
             rel="alternate"
