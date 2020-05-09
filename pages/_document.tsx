@@ -41,6 +41,7 @@ export default class MyDocument extends Document {
       <Html lang={ssgConfig.lang || "en-US"}>
         <Head>
           <link rel="manifest" href="/manifest.json" />
+          <meta name="theme-color" content="#317EFB" />
           <link
             rel="alternate"
             type="application/rss+xml"
