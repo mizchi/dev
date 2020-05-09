@@ -40,9 +40,10 @@ export default class MyDocument extends Document {
     return (
       <Html lang={ssgConfig.lang || "en-US"}>
         <Head>
+          <meta name="theme-color" content="#317EFB" />
+          <meta name="description" content="mizchi's blog" />
           <link rel="manifest" href="/manifest.json" />
           <link rel="apple-touch-icon" href="/apple-touch-icon.png"></link>
-          <meta name="theme-color" content="#317EFB" />
           <link
             rel="alternate"
             type="application/rss+xml"
