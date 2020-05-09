@@ -4259,14 +4259,15 @@ mdxx-parser@^0.4.8:
     unist-util-visit "^2.0.2"
     yaml "^1.8.3"
 
-mdxx-ssg-cli@^0.4.15:
-  version "0.4.15"
-  resolved "https://registry.yarnpkg.com/mdxx-ssg-cli/-/mdxx-ssg-cli-0.4.15.tgz#6558f9c82005773c99abfc034b2368d66d14d63c"
-  integrity sha512-xL0feS4VMx0HCeACWrEOR/lRTDcsE+zS+/8XS5owD1MAf7gFaxvvvrzaJGGqzoGntdQFbyFzLt6sFUANYiSjew==
+mdxx-ssg-cli@^0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/mdxx-ssg-cli/-/mdxx-ssg-cli-0.5.2.tgz#49d43583245633a07b7bd19ef48443b286be4a95"
+  integrity sha512-W8j7dKjY5XmM7LCVfX0FMAuX+ZhcJ+tkg6vLlhalycBsL2z/B2tVdlWdOU2dRgPny3Lm3MGT4mq8yxU1aeYenQ==
   dependencies:
     fs-extra "^9.0.0"
     lodash.sortby "^4.7.0"
     meow "^7.0.0"
+    xml-js "^1.6.11"
 
 mdxx-ssg-components@^0.4.13:
   version "0.4.13"
@@ -6002,7 +6003,7 @@ sass-loader@8.0.2:
     schema-utils "^2.6.1"
     semver "^6.3.0"
 
-sax@~1.2.4:
+sax@^1.2.4, sax@~1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
@@ -7087,6 +7088,13 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=
+
+xml-js@^1.6.11:
+  version "1.6.11"
+  resolved "https://registry.yarnpkg.com/xml-js/-/xml-js-1.6.11.tgz#927d2f6947f7f1c19a316dd8eea3614e8b18f8e9"
+  integrity sha512-7rVi2KMfwfWFl+GpPg6m80IVMWXLRjO+PxTq7V2CDhoGak0wzYzFgUY2m4XJ47OGdXd8eLE8EmwfAmdjw7lC1g==
+  dependencies:
+    sax "^1.2.4"
 
 xtend@^2.2.0:
   version "2.2.0"
