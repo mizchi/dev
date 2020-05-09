@@ -4269,10 +4269,10 @@ mdxx-ssg-cli@^0.5.5:
     meow "^7.0.0"
     xml-js "^1.6.11"
 
-mdxx-ssg-components@^0.4.13:
-  version "0.4.13"
-  resolved "https://registry.yarnpkg.com/mdxx-ssg-components/-/mdxx-ssg-components-0.4.13.tgz#4cdaf9c753f9cd7192e36d0f4177303e776a3b4a"
-  integrity sha512-gYSqSOJkSZq+ZkpXq8VbdivjGV+CpjOWXiZk0Olg588iWuqUXUXJSKK26di6WAuIREyoXJkuFI71XfCjcskSNg==
+mdxx-ssg-components@^0.5.6:
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/mdxx-ssg-components/-/mdxx-ssg-components-0.5.6.tgz#6d888c6d06bee21706e1ca15e5b2820279264c6d"
+  integrity sha512-V75pKV1158ziJJuS2Tio249E//oN3s1Jm0dHeYrFI03Yk4Rl0eVxpOLbVhqEN0qE1zMWGVvvjwOwGg2DYS3bZQ==
 
 mdxx-types@^0.4.8:
   version "0.4.8"
