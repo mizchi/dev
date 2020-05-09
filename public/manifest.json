@@ -1,6 +1,7 @@
 {
   "short_name": "My page",
   "name": "My fantastic page",
+  "start_url": "/",
   "icons": [
     {
       "src": "/static/images/icons-192.png",

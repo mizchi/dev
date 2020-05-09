@@ -40,6 +40,7 @@ export default class MyDocument extends Document {
     return (
       <Html lang={ssgConfig.lang || "en-US"}>
         <Head>
+          <link rel="manifest" href="/manifest.json" />
           <link
             rel="alternate"
             type="application/rss+xml"
