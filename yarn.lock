@@ -4259,10 +4259,10 @@ mdxx-parser@^0.4.8:
     unist-util-visit "^2.0.2"
     yaml "^1.8.3"
 
-mdxx-ssg-cli@^0.5.2:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/mdxx-ssg-cli/-/mdxx-ssg-cli-0.5.2.tgz#49d43583245633a07b7bd19ef48443b286be4a95"
-  integrity sha512-W8j7dKjY5XmM7LCVfX0FMAuX+ZhcJ+tkg6vLlhalycBsL2z/B2tVdlWdOU2dRgPny3Lm3MGT4mq8yxU1aeYenQ==
+mdxx-ssg-cli@^0.5.5:
+  version "0.5.5"
+  resolved "https://registry.yarnpkg.com/mdxx-ssg-cli/-/mdxx-ssg-cli-0.5.5.tgz#869b09dc7eff86bb851a1c2d529297eef06106b5"
+  integrity sha512-bGLa72eEMHQUOOChh6WKhmcxZj+2sXiY9cw9ygmWVIANJ4PHyd3CKDUYZOw8ajvmQ/APMfoLYEiJnhckTAx2og==
   dependencies:
     fs-extra "^9.0.0"
     lodash.sortby "^4.7.0"
