@@ -1,0 +1,37 @@
+---
+title: mdxx@0.7 tag
+created: 1589127481769
+---
+
+## 仕様変更
+
+`mdxx-ssg new:page` が `pages/*.tsx` を生成しないように
+
+かわりに、 `pages/[slug].tsx` が共通の記事要素になりました。
+
+## new feature: tags support
+
+frontmatter の yaml を使って、タグを宣言できるようになりました
+
+```yaml
+---
+title: my-title
+created: 1589127481769
+tags: [a, b, c]
+---
+# hello
+```
+
+トップページにタグ一覧が表示されます。
+
+`/tags/[tag]` ページで、そのページに紐付いている記事一覧を出せるようにしました。
+
+tags
+
+![](https://gyazo.com/a9248604c3c553701ca93632dbacd847.png)
+
+## v1.0.0 に向けて
+
+- 画像の拡大が壊れている気がするので、それを修正する
+- parser/compiler のリネーム
+- そろそろ使えるようになってきた
