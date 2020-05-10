@@ -1,0 +1,28 @@
+---
+title: mdxx@0.6 - PWA Support, Lighthouse 100, RSS対応, コンポーネントの Tailwind 化
+created: 1589106473785
+---
+
+例によってこのブログ自身が実装例です。
+
+## Done
+
+### mdxx-ssg
+
+- Lighthouse 100
+- PWA Support
+- RSS 対応 `/rss.xml`
+
+### mdxx-ssg-cli
+
+- `mdxx-ssg postbuild:rss` - rss 対応
+- `mdxx-ssg postbuild:sitemap`: WIP - sitemap.xml 生成する(Search Console に認識されない…)
+
+### mdxx-ssg-components
+
+- Tailwindcss + postcss + purgecss
+- Better CSS markup
+
+## 次の TODO
+
+- タグのサポート: frontmatter で `tags: [a,b,c]` とした場合、タグによるインデックスページを生成 `/tags/hoge`
