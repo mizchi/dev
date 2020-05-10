@@ -12,19 +12,18 @@ export default class MyDocument extends Document {
         sheet.collectStyles(<App {...props} />)
       );
       const initialProps: any = await Document.getInitialProps(ctx);
-      const styles = [
-        ...initialProps.styles,
-        <style
-          key="custom"
-          dangerouslySetInnerHTML={{
-            __html: css,
-          }}
-        />,
-        ...sheet.getStyleElement(),
-      ];
       return {
         ...page,
-        styles,
+        styles: [
+          ...initialProps.styles,
+          <style
+            key="custom"
+            dangerouslySetInnerHTML={{
+              __html: css,
+            }}
+          />,
+          ...sheet.getStyleElement(),
+        ],
       };
     } finally {
       sheet.seal();
@@ -35,10 +34,6 @@ export default class MyDocument extends Document {
     return (
       <Html lang={ssgConfig.lang || "en-US"}>
         <Head>
-          <meta name="theme-color" content="#317EFB" />
-          <meta name="description" content="mizchi's blog" />
-          <link rel="manifest" href="/manifest.json" />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png"></link>
           <link
             rel="alternate"
             type="application/rss+xml"
@@ -49,7 +44,7 @@ export default class MyDocument extends Document {
             rel="alternate"
             type="application/rss+xml"
             title={ssgConfig.siteName}
-            href="/sitemap.xml"
+            href="sitemap.xml"
           /> */}
         </Head>
         <body>
