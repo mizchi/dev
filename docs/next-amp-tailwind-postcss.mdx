@@ -1,0 +1,130 @@
+---
+title: next.js の amp モードで tailwind.css を purgecss と合わせて使う
+created: 1589132870983
+tags:
+  - next
+  - amp
+  - tailwindcss
+  - purgecss
+---
+
+[このリポジトリ](https://github.com/mizchi/next-amp-tailwind-purgecss) でやったこと。
+
+## やろうとしたこと
+
+tailwind.css は Utility First と銘打った CSS フレームワークで、コンポーネント化を前提としたモダンフレームワークと相性がいいです。今回は next.js の amp-mode で tailwind を使おうとしてみました。
+
+[Tailwind CSS \- A Utility\-First CSS Framework for Rapidly Building Custom Designs](https://tailwindcss.com/)
+
+## 問題
+
+前提として、 amp には inline css の容量制限があり、75kb を超えると AMP と認識されなくなります。
+
+tailwind はビルドして使うのが前提のフレームワークですが、全部入りの tailwind.min.css は 1.3 M あります。これでは到底、75 kb に収まりません。
+
+[AMP の CSS サイズ上限が 50000 バイトから 75000 バイトへ 50%増量 ⬆ \| 海外 SEO 情報ブログ](https://www.suzukikenichi.com/blog/amp-increases-css-limit-from-50000-bytes-to-75-bytes/)
+
+tailwind css は reset.css が重いというより、utility の数が膨大で、それらをすべて読み込むのでビルドサイズがかさんでるという感じでした。
+
+なので、 purgecss を使って、使っている CSS だけ使えばよい、という発想で CSS のサイズを削ってみました。
+
+## purgecss
+
+purgecss は指定した html,js,tsx, vue のソースコード上に出現する CSS セレクタのみ抽出するライブラリです
+
+[FullHuman/purgecss: Remove unused CSS](https://github.com/FullHuman/purgecss)
+
+もちろん、素朴にやるとそれだけでは動かないので、さらに whitelist で許可する CSS を宣言します。今回は postcss を通して使います。
+
+## postcss の設定
+
+ついでに、`postcss-import` を使って、単一ファイルに bundle しつつ、 `cssnano` で圧縮しています。
+
+準備
+
+```
+yarn add postcss postcss-import taliwindcss @fullhuman/postcss-purgecss postcss-preset-env cssnano postcss-cli -D
+```
+
+`postcss.config.js`
+
+```js
+module.exports = {
+  plugins: [
+    require("postcss-import"),
+    require("tailwindcss"),
+    require("@fullhuman/postcss-purgecss")({
+      content: [
+        "./pages/**/*.{js,jsx,ts,tsx}",
+        "./components/**/*.{js,jsx,ts,tsx}",
+      ],
+      defaultExtractor: (content) => content.match(/[\w-/:]+(?<!:)/g) || [],
+    }),
+    require("postcss-preset-env"),
+    require("cssnano")({
+      preset: "default",
+    }),
+  ],
+};
+```
+
+で、
+
+```
+postcss style/index.css -o css/bundle.css # ビルド
+```
+
+これで css/bundle.css をビルドできました。
+
+## next amp で読み込む
+
+普通の next.js 環境なら `import "./bundle.css"` でいいのですが、amp mode だとちょっと工夫する必要があります。
+
+webpack の `raw-loader` を通して css を文字列として読み込み、style tag の中に展開します。 (`yarn add raw-loader -D`)
+
+```tsx
+// @ts-ignore
+import bundleCss from "!raw-loader!../style/bundle.css";
+import Document, { Html, Head, Main, NextScript } from "next/document";
+
+export default class MyDocument extends Document {
+  static async getInitialProps(ctx: any) {
+    const page = ctx.renderPage((App) => (props) => <App {...props} />);
+    const initialProps: any = await Document.getInitialProps(ctx);
+    return {
+      ...page,
+      styles: [
+        ...initialProps.styles,
+        <style
+          key="custom"
+          dangerouslySetInnerHTML={{
+            __html: bundleCss,
+          }}
+        />,
+      ],
+    };
+  }
+
+  render() {
+    return (
+      <Html>
+        <Head></Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </Html>
+    );
+  }
+}
+```
+
+(`initialProps.styles` は next.js が生成する AMP のためのデフォルト CSS なので、必須です)
+
+## おまけ: mdxx-ssg-components に適用してみた
+
+動作サンプルはこのブログ自身です。ヘッダやフッタなどが tailwind.css によって書かれています。
+
+このブログは [mdxx/packages/ssg](https://github.com/mizchi/mdxx/tree/master/packages/ssg) で書かれているのですが、その内部でさらに分割した `mdxx-ssg-components` パッケージに tailwind + purgecss を適用しました。
+
+`bundle.css` のサイズは最終的に `1.3M` から `6.3K` になりました。これなら AMP 環境でも安心。
