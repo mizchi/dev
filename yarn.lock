@@ -4405,10 +4405,10 @@ mdxx-ssg-cli@^0.7.0:
     meow "^7.0.0"
     xml-js "^1.6.11"
 
-mdxx-ssg-components@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/mdxx-ssg-components/-/mdxx-ssg-components-0.7.0.tgz#de22d0540dfbbe3cba18d4f9790c58908adec179"
-  integrity sha512-hmgFjENNgyjRn3AxArmW3IC382ND3xw6ZIt7yFhxonZ6KHxhu2dFbqs0kMeBnbVVfKAljtIsQUccGp10RlPszQ==
+mdxx-ssg-components@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/mdxx-ssg-components/-/mdxx-ssg-components-0.7.1.tgz#c9acd1331a3dacbfba830c5f3b664c1dcda4c468"
+  integrity sha512-+YKtRJgI71uKCrAYqu4aXr3LAqG6SpYsvQ8BP3+fJE7iqp5bEAuxuuVGAPNmDtAyFvyNcPyiH5dBcroPM45Ddw==
   dependencies:
     cssnano "^4.1.10"
     date-fns "^2.13.0"
