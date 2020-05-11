@@ -37,7 +37,6 @@ const RUN_TEMPLATE = (entryPath) => `
 import { h, render } from "preact";
 import Entry from "${entryPath}";
 const root = document.querySelector(".root");
-console.log("root", root.id);
 const encoded = root.id;
 const props = encoded ? JSON.parse(atob(encoded)) : {};
 render(h(Entry, props), root);
@@ -64,7 +63,7 @@ const config = scriptNames.map((name) => {
         ...plugins,
       ],
       output: {
-        file: `public/static/amp-script/${base}/run.js`,
+        file: `public/amp-script/${base}/run.js`,
         format: "iife",
       },
     },
@@ -75,7 +74,7 @@ const config = scriptNames.map((name) => {
         ...plugins,
       ],
       output: {
-        file: `public/static/amp-script/${base}/ssr.js`,
+        file: `public/amp-script/${base}/ssr.js`,
         format: "esm",
       },
     },
