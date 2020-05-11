@@ -2,14 +2,14 @@
 import { h, Fragment } from "preact";
 import { useState } from "preact/hooks";
 
-function Counter() {
-  const [state, setState] = useState(0);
+function Counter(props: { initialValue: number }) {
+  const [state, setState] = useState(props.initialValue);
   return (
     <button onClick={() => setState((n) => n + 1)}>{String(state)}</button>
   );
 }
 
-export default function App() {
+export default function App(props: any) {
   const [state, setState] = useState(false);
   return (
     <Fragment>
@@ -22,7 +22,7 @@ export default function App() {
       </button>
       {state && (
         <div>
-          <Counter />
+          <Counter initialValue={props.initialValue} />
         </div>
       )}
     </Fragment>

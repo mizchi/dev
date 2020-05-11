@@ -1,10 +1,14 @@
 /** @jsx h */
-import { h, Fragment } from "preact";
+import { h } from "preact";
 
-export default function Hello() {
+export default function Hello(props: any) {
   return (
-    <Fragment>
-      <div>hello</div>
-    </Fragment>
+    <div
+      onClick={() => {
+        console.log(props);
+      }}
+    >
+      hello, {String(props.foo)} {props.bar}
+    </div>
   );
 }
