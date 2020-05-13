@@ -1,12 +1,12 @@
 ---
 title: next.js の AMP mode を使って静的サイトを作る
 created: 1588760362771
-tags: [next, mdxx]
+tags: [next, amdx]
 ---
 
-この記事は mdxx-ssg を作りながら, next.js で AMP に対応したときにやったことです。
+この記事は amdxg を作りながら, next.js で AMP に対応したときにやったことです。
 
-コードはこちらです [mdxx/packages/ssg at master · mizchi/mdxx](https://github.com/mizchi/mdxx/tree/master/packages/ssg)
+コードはこちらです [amdx/packages/ssg at master · mizchi/amdx](https://github.com/mizchi/amdx/tree/master/packages/ssg)
 
 ## AMP について
 
@@ -96,11 +96,11 @@ export default () => {
 
 [ページが検出されるようにする \- amp\.dev](https://amp.dev/ja/documentation/guides-and-tutorials/optimize-and-measure/discovery/)
 
-mdxx-ssg での記事のボイラープレートでは、Full AMP を採用していますが、必要に応じて通常ページのレンダリングもできるようにしています。
+amdxg での記事のボイラープレートでは、Full AMP を採用していますが、必要に応じて通常ページのレンダリングもできるようにしています。
 
 ### Hybrid AMP
 
-mdxx-ssg では採用してませんが、 next.js ではモバイルと Google へのインデックスのために AMP を生成しつつ、PC 用には通常の AMP のレンダリングを行うモードがあります。こっちのほうが一般的な AMP かも。
+amdxg では採用してませんが、 next.js ではモバイルと Google へのインデックスのために AMP を生成しつつ、PC 用には通常の AMP のレンダリングを行うモードがあります。こっちのほうが一般的な AMP かも。
 
 ```js
 // pages/index.tsx
@@ -145,7 +145,7 @@ import prismCss from "!!raw-loader!../styles/prism.css";
 // @ts-ignore
 import custom from "!!raw-loader!../styles/styles.css";
 import { ServerStyleSheet } from "styled-components";
-import ssgConfig from "../mdxx-ssg.json";
+import ssgConfig from "../amdxg.config";
 
 export default class MyDocument extends Document {
   static async getInitialProps(ctx: any) {
@@ -230,29 +230,29 @@ amp では 普通の JS を動かすことはできませんが、 WebWorker 環
 
 [AMP で任意の JS を実行できる amp\-script を試してみた \- Qiita](https://qiita.com/mizchi/items/c7d648eafb03d4c5378a)
 
-mdxx-ssg では、これを next.js+webpack と連携してシームレスに組み込める仕組みを、なにか用意しようと考えています。
+amdxg では、これを next.js+webpack と連携してシームレスに組み込める仕組みを、なにか用意しようと考えています。
 
 今はこういう PR を出しています。
 
 [\[RFC\] Add npm library mode by mizchi · Pull Request \#855 · ampproject/worker\-dom](https://github.com/ampproject/worker-dom/pull/855)
 
-## mdxx でやったこと
+## amdx でやったこと
 
-### mdxx-parser での code syntax highlighter の実装
+### amdx での code syntax highlighter の実装
 
 amp 制約下では、JS が実行できないので、プログラミング言語のランタイムでの構文解析を実行することはできません。なので、markdown のコードブロックの中身を、事前にトークンに落とすところまで行っています。
 
-[mdxx/highlighter\.ts at master · mizchi/mdxx](https://github.com/mizchi/mdxx/blob/master/packages/parser/src/highlighter.ts)
+[amdx/highlighter\.ts at master · mizchi/amdx](https://github.com/mizchi/amdx/blob/master/packages/parser/src/highlighter.ts)
 
 パース後は言語非依存のトークンに変換されているので、あとは CSS を当てるだけです。
 
 https://github.com/PrismJS/prism-themes/tree/master/themes
 
-### mdxx-compiler での amp-img 対応
+### amdx-runner での amp-img 対応
 
 amp ではレイアウト最適化のために img を直接使うのではなく、 `amp-img` を使う必要があります。
 
-mdxx-ssg 用の mdxx-compiler では、AMP フラグを付けると、 `![alt](imglink)` の link 構文を、次のようなコードと HTML 要素に変換します。
+amdxg 用の amdx-runner では、AMP フラグを付けると、 `![alt](imglink)` の link 構文を、次のようなコードと HTML 要素に変換します。
 
 こういう alt を使った構文を想定
 
@@ -265,7 +265,7 @@ mdxx-ssg 用の mdxx-compiler では、AMP フラグを付けると、 `![alt](i
 展開コード
 
 ```tsx
-import Doc from "./doc.mdx"; // mdxx-loader で変換される
+import Doc from "./doc.mdx"; // amdx-loader で変換される
 <Doc amp />; // AMP フラグを立てると img を amp-img に変換する
 ```
 

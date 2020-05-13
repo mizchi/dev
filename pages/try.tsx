@@ -1,5 +1,5 @@
-import { AmpScript, Layout } from "mdxx-ssg-components";
-import ssgConfig from "../mdxx-ssg.json";
+import { AmpScript, Layout } from "amdxg-components";
+import ssgConfig from "../amdxg.config";
 import ssrCounter from "../public/amp-script/counter/ssr";
 
 export const config = {
@@ -30,7 +30,7 @@ function Counter(props: any) {
 
 export default () => {
   return (
-    <Layout ssgConfig={ssgConfig}>
+    <Layout config={ssgConfig}>
       <Counter initialValue={3} />
     </Layout>
   );

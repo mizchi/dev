@@ -2,18 +2,18 @@
 
 ## Features
 
-- Build mdxx on next ssg
+- Build amdx on next ssg
 - Support AMP
 
 ## Create your own blog
 
 ```bash
 # install node and npm
-npx degit mizchi/mdxx/packages/ssg blog
+npx degit mizchi/amdx/packages/ssg blog
 cd blog
 npm install
-cp mdxx-ssg.json.example mdxx-ssg.json
-# edit mdxx-ssg.json for you
+cp amdxg.config.example amdxg.config
+# edit amdxg.config for you
 
 # create new page
 npm run new-page

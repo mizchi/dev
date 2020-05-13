@@ -1,7 +1,7 @@
 import Head from "next/head";
-import { Layout, PageList, TagList } from "mdxx-ssg-components";
+import { Layout, PageList, TagList } from "amdxg-components";
 import pages from "../gen/pages.json";
-import ssgConfig from "../mdxx-ssg.json";
+import ssgConfig from "../amdxg.config";
 import tagmap from "../gen/tagmap.json";
 
 export const config = { amp: true };
@@ -12,7 +12,7 @@ export default () => {
       <Head>
         <title>{ssgConfig.siteName}</title>
       </Head>
-      <Layout ssgConfig={ssgConfig}>
+      <Layout config={ssgConfig}>
         <h2>Articles</h2>
         <PageList pages={pages as any} />
         <h2>Tags</h2>

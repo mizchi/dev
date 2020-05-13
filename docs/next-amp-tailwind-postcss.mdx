@@ -121,10 +121,10 @@ export default class MyDocument extends Document {
 
 (`initialProps.styles` は next.js が生成する AMP のためのデフォルト CSS なので、必須です)
 
-## おまけ: mdxx-ssg-components に適用してみた
+## おまけ: amdxg-components に適用してみた
 
 動作サンプルはこのブログ自身です。ヘッダやフッタなどが tailwind.css によって書かれています。
 
-このブログは [mdxx/packages/ssg](https://github.com/mizchi/mdxx/tree/master/packages/ssg) で書かれているのですが、その内部でさらに分割した `mdxx-ssg-components` パッケージに tailwind + purgecss を適用しました。
+このブログは [amdx/packages/ssg](https://github.com/mizchi/amdx/tree/master/packages/ssg) で書かれているのですが、その内部でさらに分割した `amdxg-components` パッケージに tailwind + purgecss を適用しました。
 
 `bundle.css` のサイズは最終的に `1.3M` から `6.3K` になりました。これなら AMP 環境でも安心。

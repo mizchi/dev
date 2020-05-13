@@ -5,7 +5,7 @@ module.exports = {
       test: /\.mdx?/,
       use: [
         {
-          loader: "mdxx-loader",
+          loader: "amdx-loader",
           options: {
             amp: true,
           },

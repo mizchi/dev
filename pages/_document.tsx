@@ -1,8 +1,8 @@
 import Document, { Html, Head, Main, NextScript } from "next/document";
 // @ts-ignore
-import css from "!!raw-loader!mdxx-ssg-components/css/bundle.css";
+import css from "!!raw-loader!amdxg-components/css/bundle.css";
 import { ServerStyleSheet } from "styled-components";
-import ssgConfig from "../mdxx-ssg.json";
+import ssgConfig from "../amdxg.config";
 
 export default class MyDocument extends Document {
   static async getInitialProps(ctx: any) {

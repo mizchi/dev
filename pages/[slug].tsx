@@ -1,8 +1,8 @@
-import { Article, Layout } from "mdxx-ssg-components";
+import { Article, Layout } from "amdxg-components";
 import { GetStaticProps } from "next";
 import ReactDOMServer from "react-dom/server";
 import pages from "../gen/pages.json";
-import ssgConfig from "../mdxx-ssg.json";
+import ssgConfig from "../amdxg.config";
 import Head from "next/head";
 
 type Props = {
@@ -55,7 +55,7 @@ export default (props: Props) => (
         {props.frontmatter.title} - {ssgConfig.siteName}
       </title>
     </Head>
-    <Layout ssgConfig={ssgConfig}>
+    <Layout config={ssgConfig}>
       <Article
         ssgConfig={ssgConfig}
         history={props.history}

@@ -1,14 +1,14 @@
 ---
 title: MDX eXtended = MDXX | AMP対応 Markdown Compiler と静的サイトジェネレーター
 created: 1588688918620
-tags: [mdxx]
+tags: [amdx]
 ---
 
-最近作っている mdxx という markdown コンパイラとそのツール郡を紹介します。
+最近作っている amdx という markdown コンパイラとそのツール郡を紹介します。
 
-GitHub はここ [mizchi/mdxx](https://github.com/mizchi/mdxx)
+GitHub はここ [mizchi/amdx](https://github.com/mizchi/amdx)
 
-このサイト自体も、 [mdxx-ssg](https://github.com/mizchi/mdxx/tree/master/packages/ssg) というツールで作られています。
+このサイト自体も、 [amdxg](https://github.com/mizchi/amdx/tree/master/packages/ssg) というツールで作られています。
 
 ## ゴールをどこに設定したか
 
@@ -18,7 +18,7 @@ GitHub はここ [mizchi/mdxx](https://github.com/mizchi/mdxx)
 - Markdown プレビュー高速化+ランタイム最小化のために、AST(JSON) 生成する部分と、AST からの実行処理部分を分割した
 - 基本は Full AMP で、React Component 動くページを作れる余地も残したい
 
-## 何を作ったか/mdxx とはなにか
+## 何を作ったか/amdx とはなにか
 
 - remark ベースで React Component を出力する parser / compiler / cli / next.js template
 - AMP 対応: img は `amp-img` を吐くなど
@@ -30,11 +30,11 @@ GitHub はここ [mizchi/mdxx](https://github.com/mizchi/mdxx)
 
 ## 周辺ツール: npm packages
 
-- mdxx-loader: webpack loader
-- rollup-plugin-mdxx: rollup
-- mdxx-cli: コマンドラインで mdx をコンパイルできる CLI ツール
+- amdx-loader: webpack loader
+- rollup-plugin-amdx: rollup
+- amdx-cli: コマンドラインで mdx をコンパイルできる CLI ツール
 
-## 周辺ツール mdxx-ssg
+## 周辺ツール amdxg
 
 このブログ自身がサンプルなのですが、自分自身のサイトを作ることもできます。
 
@@ -42,11 +42,11 @@ GitHub はここ [mizchi/mdxx](https://github.com/mizchi/mdxx)
 
 ```bash
 # install node and npm
-npx degit mizchi/mdxx/packages/ssg blog
+npx degit mizchi/amdx/packages/ssg blog
 cd blog
 npm install
-cp mdxx-ssg.json.example mdxx-ssg.json
-# edit mdxx-ssg.json for you
+cp amdxg.config.example amdxg.config
+# edit amdxg.config for you
 
 # create new page
 npm run new-page
@@ -84,7 +84,7 @@ netlify deploy -d out --prod
 - [ ] カスタムな Remark Plugin を読み込む口を開ける
 - [ ] amp-script 対応: AMP 内でバンドルした js を生成して、worker-dom で動かす
 - [ ] amp-mathml: 非 AMP 環境向けでは KaTex で対応しているが、amp 時は amp-mathml に切り替える
-- [ ] https://mdbuf.netlify.com/ で使うコンパイラを mdxx にする
+- [ ] https://mdbuf.netlify.com/ で使うコンパイラを amdx にする
 - [ ] 推奨の CSS を配布する
 - [ ] commit log から history pages を作成し、かつ GitHub の PR を作れる機能を作りたい(fork せずにできるのか？)
 
@@ -94,10 +94,10 @@ https://github.com/mdx-js/mdx/tree/master/packages/mdx を読んだ限りは、�
 
 - remark の parse と complile(stringify) を分離できない
 - [mdbuf](https://mdbuf.netlify.com/) を作った経験だと、 React Element は worker で渡せないので、pure json な AST を作る必要がある
-- がっつり拡張するなら mdxx が良さそうだった
+- がっつり拡張するなら amdx が良さそうだった
 
 ## おわり
 
 買っておいた秘蔵の `https://mizchi.dev` を netlify から繋いで、今後も自分のブログとしてドッグフーディングしつつ作っていきます。
 
-機能要望などあったら、[GitHub の Issue](https://github.com/mizchi/mdxx/issues) か [@mizchi](https://twitter.com/mizchi) まで Twitter でお知らせください。
+機能要望などあったら、[GitHub の Issue](https://github.com/mizchi/amdx/issues) か [@mizchi](https://twitter.com/mizchi) まで Twitter でお知らせください。

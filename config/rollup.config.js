@@ -5,7 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import virtual from "@rollup/plugin-virtual";
 import typescript from "rollup-plugin-typescript2";
 import builtins from "rollup-plugin-node-builtins";
-import { mdxx } from "rollup-plugin-mdxx";
+import { amdx } from "rollup-plugin-amdx";
 import { terser } from "rollup-plugin-terser";
 
 const plugins = [
@@ -27,7 +27,7 @@ const plugins = [
   }),
   nodeResolve(),
   commonjs(),
-  mdxx(),
+  amdx(),
   terser({
     module: true,
   }),
