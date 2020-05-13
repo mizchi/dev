@@ -1,0 +1,59 @@
+---
+title: amdx-0.8 MDXX => AMDX へ
+created: 1589389359440
+---
+
+## mdxx => amdx
+
+MDX eXtended => Accelarated MDX
+
+- `mdxx-ssg` => `amdxg`
+- `mdxx-*` => `amdx-*`
+- `mdxx-parser` => `amdx`
+- `mdxx-compiler` => `amdx-runner`
+
+mdxx-parser がほぼ全部の変換を担ってたので、リネームついでに `amdx` というライブラリに変更。
+
+パッケージ名を変えた理由ですが、 mdxx という名前は、MDMA などの合成ドラッグの総称として使われる言葉であんまりイメージがよくなく、また、AMP のフィーチャーが重くなってきたので、A の文字を頭に付けました。
+
+[Urban Dictionary: mdxx](https://www.urbandictionary.com/define.php?term=mdxx)
+
+## 変更
+
+- `amdxg-cli`: `amdxg new:page [slug]` でのページ生成に、必ず日時プレフィックスがつくようにしました。記事が増えたときの
+
+## バグ修正
+
+- `amdxg-components`: tailwind の導入と purgecss の導入で本来必要な CSS を削ってしまっていたのをもとに戻しました。
+
+## 開発中の機能
+
+### next.js 9.4 の SSG Auto generation で now 対応
+
+現在は `next export` する前提で作っているが、9.4 の段階的 SSG で, now にデプロイできるようにしたい。
+
+### `amdxg new:script`
+
+`amp-script` を使った Component の雛形を追加します。amp-sciprt は 150kb 制限があり、また動的コンポーネントの追加には、SSR 相当の処理が必要です。なので今回は React ではなく preact を使うことにしました。
+
+あるいは、 markdown で `tsx:amp-script` のようなコードブロックから自動生成することや、wasm を使った処理を考えています。
+
+```tsx:amp-script
+/** @jsx h */
+import { h } from "preact";
+import { useState } from "preact/hooks";
+
+export default function Counter(props: { initialValue: number }) {
+  const [state, setState] = useState(props.initialValue);
+  return (
+    <div>
+      <h1>Counter Example</h1>
+      <span>{String(state)}</span>
+      <button onClick={() => setState((n) => n + 1)}>+</button>
+      <button onClick={() => setState((n) => n - 1)}>-</button>
+    </div>
+  );
+}
+```
+
+こういうコードブロックを抽出して、rollup でビルドしたコードを生成できそう
