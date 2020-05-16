@@ -1,0 +1,94 @@
+---
+title: Next.js の時代が来る
+created: 1589463712919
+tags: [react, next.js, blitz]
+---
+
+一昨年まで、フリーランスの仕事の一つとして node の SSR フレームワークを調査してそのベストプラクティスを提案する仕事をやっていた。
+
+その中で next.js はとても有力な選択肢の一つだったのだけど、どうしても本番投入しかねる懸念点がいくつか残っていた。
+
+## 1 年前までの懸念点
+
+- 静的または query parameter の routing しかなく、SEO 上求められる URL を選択することが不可能なことがあった。
+- SSG に注力してるのも、SSR のフレームワークとしては方向性に疑問があった
+- カスタマイズしようとすると、単なる node.js サーバーとして拡張することが求められ、ワンストップなフレームワークとは言えなかった
+
+しかし、これらはこの一年の間に払拭された。
+
+- Dynamic Routing の採用で、ルーティング設計の懸念が払拭された
+- エコシステムが揃ってきて、最低限の設定で拡張箇所が最小限になった。また vercel の存在が大きい
+- SSR と SSG の良いとこ取りのフレームワークとして、「段階的な SSG」という選択肢に結実しようとしている
+
+## next.js のいいとこどり: Dynamic Routing
+
+next 9 から追加された File system-Based Dynamic Routing で、 `pages/[id].tsx` や `pages/[foo]/[bar].tsx` というファイルを作ることによって、自由度が高い動的ルーティングができるようになった。
+
+[Blog \- Next\.js 9 \| Next\.js](https://nextjs.org/blog/next-9)
+
+このときのアップデートで、無設定で TypeScript が読み込み可能になったり、 `pages/api/*.ts` が自動的に `/api/*` にマップされるなど、細かいところも気が利いている。
+
+また、 [next.9.3](https://nextjs.org/blog/next-9-3) で追加された `getServerSideProps` や `getStaticProps/getStaticPaths` といった API が本当に便利で、今までは `getInitialProps` で パラメータを決めて、それを動的もしくは 静的な URL を書き出すために `exportPathMap` でパス一覧を指定して、といった感じだったが、静的サイト生成時と、動的サイト生成時で、明示的に区別しつつ、似たような設計が可能になった。
+
+余談として、去年東京に来ていた [Joe Haddad](https://github.com/Timer) に直接ルーティング周りについて質問したことがあって、「[umijs](https://umijs.org/) を参考にしたやつを作ってるから待ってて」といっていた。待っていたら期待以上のものが来た。最高。
+
+## 段階的静的サイト生成はキラー機能になりうる
+
+で、ここからが本題なのだけど、 next9.4 で実験的に追加された、[incremental-static-regeneration-beta](https://nextjs.org/blog/next-9-4#incremental-static-regeneration-beta) という機能に、とても未来を感じている。
+
+これが何なのかと言うと、フロントエンドの従来の常識では、ウェブサイトの最適化には html を CDN の Edge Cache してしまうのが理論上最速だが、SSR や node.js のアプリケーション・サーバーとして処理をする場合、。
+
+このデモをみるとよい [Static Tweet Next\.js Demo](https://static-tweet.now.sh/)
+
+従来なら、静的サイト
+
+また、
+
+## 段階的な SSG
+
+React Hooks と React.Context が出た去年ぐらいから、
+
+去年ぐらい
+
+next.js
+
+[Blog \- Next\.js 9\.4 \| Next\.js](https://nextjs.org/blog/next-9-4)
+
+とくに、段階的な SSG Support というのはキラー機能になりうると思っていて、今までは難しかった
+
+## サンプルの充実
+
+## 多様な出力モード
+
+## Filesystem base routing & Dynamic Routing のサポート
+
+`pages/[id].tsx`
+
+## AMP Support
+
+## Blitz
+
+blitz は next.js をバックエンドにした Rails 志向のフレームワーク
+
+- View として React
+- Routing として next.js
+- ORM として prisma
+
+どういうコードがあるかは、 [このサンプル](https://github.com/blitz-js/blitz/tree/canary/examples/store) をみるといい。見覚えがあるディレクトリ構造だろう。
+
+```
+npm i -g blitz
+blitz new my-app
+cd my-app
+blitz start
+```
+
+scaffolding が
+
+https://github.com/blitz-js/blitz/tree/canary/examples/store
+
+このようなフレームワークが出てきた背景として、 node.js 界隈のエコシステムの進化が、比較的ゆるやかになり、洗練されてきたのがあると思う。
+
+- ESM 仕様の安定 / Webpack の事実上の標準化
+- ベストプラクティスとしての TypeScript の採用
+- eslint / prettier
