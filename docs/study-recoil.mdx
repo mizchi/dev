@@ -1,0 +1,177 @@
+---
+title: Recoil について勉強した
+created: 1589622364679
+---
+
+Fecebook が新しく発表した [Recoil](https://recoiljs.org/) について
+
+## 自分の学習手順
+
+- [Getting Started \| Recoil](https://recoiljs.org/docs/introduction/getting-started/) を写経して動かす
+- [Facebook 製の新しいステート管理ライブラリ「Recoil」を最速で理解する \- uhyo/blog](https://blog.uhy.ooo/entry/2020-05-16/recoil-first-impression/) で非同期周りを理解
+- 公式ドキュメントの API Reference で理解 [<RecoilRoot \.\.\.props /> \| Recoil](https://recoiljs.org/docs/api-reference/core/RecoilRoot)
+
+これは自分が写経しながら書いた型定義。色々足りてないがチュートリアルで出る範囲は理解できる。
+
+```ts
+declare module "recoil" {
+  export type RecoilState<T> = {};
+  export const RecoilRoot: React.ComponentType<{
+    initializeState?: (options: {
+      set: <T>(recoilVal: RecoilState<T>, newVal: T) => void;
+      setUnvalidatedAtomValues: (atomMap: Map<string, unknown>) => void;
+      dangerouslyAllowMutability?: boolean;
+    }) => void;
+    children: any;
+  }>;
+  export function atom<T>(input: {
+    key: string;
+    default: ValueType;
+  }): RecoilState<T>;
+  export function selector<T>(input: {
+    key: string;
+    get(helpers: {
+      get<U>(atom: RecoilState<U>): U;
+      getPromise<U>(atom: RecoilState<U>): Promise<U>;
+    }): T;
+    set?(
+      helpers: {
+        set<U>(atom: RecoilState<U>, newVal: U): void;
+      },
+      newVal: T
+    ): void;
+  });
+  export function useRecoilValue<T>(atom: RecoilState<T>): T;
+  export function useRecoilState<T>(
+    atom: RecoilState<T>
+  ): [T, (action: React.SetStateAction<T>) => void];
+  export function useSetRecoilState<T>(
+    atom: RecoilState<T>
+  ): (action: React.SetStateAction<T>);
+}
+```
+
+DefinitelyTyped に PR が出てるが、まだマージされてない。
+
+[Add type definitions for recoil by csantos42 · Pull Request \#44756 · DefinitelyTyped/DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/pull/44756)
+
+後述する `waitForAll` などのユーティリティが書きかけ。
+
+## 思想的な部分
+
+- Redux は常に一つでかつすべての状態ありきの思想なので、State とその手続きが宣言される。このせいで、常に使わない State も初期化しないといけない
+- Recoil は状態を依存グラフで表現する。atom とそれを参照する selector があり、selector が atom を購読して反映される
+
+また、 selector への set で atom を非同期に書き換えるというインターフェースになっている。単方向サブスクリプションではなく、双方向。
+
+## selector が immutable とはどういうことか。
+
+単一な状態を持つ atom だけではなく、グラフ中で selector ノードも、まるで Mutable かのような API を持つ。自分自身への更新時、非同期に個別の atom への set を再発行できるファサードになっている。
+
+公式サンプルからの引用だが、次のコードは華氏と摂氏の二値が連動して動く。
+
+```tsx
+import {
+  RecoilRoot,
+  atom,
+  selector,
+  useRecoilState,
+  useRecoilValue,
+} from "recoil";
+
+const tempFahrenheit = atom<number>({
+  key: "tempFahrenheit",
+  default: 32,
+});
+
+const tempCelcius = selector<number>({
+  key: "tempCelcius",
+  get: ({ get }) => ((get(tempFahrenheit) - 32) * 5) / 9,
+  set: ({ set }, newValue) => set(tempFahrenheit, (newValue * 9) / 5 + 32),
+});
+
+function TempCelcius() {
+  const [tempF, setTempF] = useRecoilState<number>(tempFahrenheit);
+  const [tempC, setTempC] = useRecoilState<number>(tempCelcius);
+
+  const addTenCelcius = () => setTempC(tempC + 10);
+  const addTenFahrenheit = () => setTempF(tempF + 10);
+
+  return (
+    <div>
+      Temp (Celcius): {tempC}
+      <br />
+      Temp (Fahrenheit): {tempF}
+      <br />
+      <button onClick={addTenCelcius}>Add 10 Celcius</button>
+      <br />
+      <button onClick={addTenFahrenheit}>Add 10 Fahrenheit</button>
+    </div>
+  );
+}
+```
+
+元となる状態自体は tempFahrenheit が atom で、その selector としての tempCelcius だが、tempCelcius への set で、 tempFahrenheit を書き換えて、値を反映している。
+
+これは正直、議論が分かれそうな設計だと思っていて、 vue の computed property などに近いようにみえて、computed property には不可能な副作用も記述できるが、その実装が正しいかどうかは、実装者が責任を持つことになるだろう。
+
+単なる set では atom を直接書き換えたほうがきれいだと思うが、ここで面白いのは、set の実装が非同期の Promise を取れるということだ。
+
+## 非同期な state と Suspense
+
+ここで state / selector は非同期を取れるので、 get / set は async/await のインターフェースをとることができる。
+
+1 秒後に値を表示する例
+
+```tsx
+const lazyState = selector({
+  key: "lazyState",
+  get: async () => {
+    await new Promise((r) => setTimeout(r, 1000));
+    return 1;
+  },
+});
+
+function LazyValue() {
+  const value = useRecoilValue<number>(lazyState);
+  return <div>{value}</div>;
+}
+
+function App() {
+  return (
+    <RecoilRoot>
+      <Suspense fallback="loading">
+        <LazyValue />
+      </Suspense>
+    </RecoilRoot>
+  );
+}
+
+ReactDOM.render(<App />, document.querySelector("main"));
+```
+
+実装をみると、最初の `useRecoilValue` で `throw new Promise(...)` を発行し、 Suspense にキャッチさせて解決させるやつ。
+
+これを使うと、ネットワーク越しのリソースを抽象したりすることができそう。
+
+## Redux との比較
+
+- 大域の再計算にならないので、React Component から参照されるときの再計算が、最小限
+- 必要なコードだけビルドに含めることができる
+- 状態更新の手続きは reducer ではなく、setState の React.SetStateAction 準拠
+- 非同期抽象が middleware ではなく、 promise + suspense になる
+
+## 自分がまだわかってないところ
+
+Redux では常にひとつの状態が全部の状態を表すので、SSR で渡したり、 localStorage に状態を書き込んでから、再訪時に状態を復元する、というのが容易だった。Recoil では、RecoilRoot がすべての状態を管理しているはずだが、それを吐き出したり、よみこんだりする方法が(まだ)ない。
+
+今ちょうどリロードしたらドキュメントに Core 以外の Utils というのが生えて、この辺の `waitForAll` にその機能がありそうなので、しばらく待ったほうがよさそう。
+
+https://recoiljs.org/docs/api-reference/utils/waitForAll
+
+可能なら React に依存せず、Recoil のリソースの依存グラフだけで実行できると、サーバー上で hydration のために初期実行できて、嬉しい気がする。
+
+## で、結局使い物になるの？
+
+- 自分的にはアリ。ただし、selector への set は、非同期のユースケースを限定したほうが良さそう
+- 状態をダンプする系の API は足りてない。
