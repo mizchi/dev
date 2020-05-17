@@ -70,7 +70,7 @@ deno-ja の slack で聞いた限りでは justjavac の方が公式に近い立
 - preact
 - htm
 
-snowpack は一種のフロントエンド向けのバンドラーなんですが、webpack に頼らずネイティブ ESM で動くモジュールを吐いて、それを importmap を、 deno の importmap として使う、といった方法を選んでみました。
+snowpack は一種のフロントエンド向けのバンドラーなんですが、webpack に頼らずネイティブ ESM で動くモジュールを吐いて、その際に snowpack が生成する `import-map.json` を deno の importmap として使う、といった方法を選んでみました。
 
 - [Snowpack](https://www.snowpack.dev/)
 - [WICG/import\-maps: How to control the behavior of JavaScript imports](https://github.com/WICG/import-maps)
@@ -82,6 +82,8 @@ snowpack は一種のフロントエンド向けのバンドラーなんです�
 ```
 snowpack && deno run --unstable --allow-write --allow-read --allow-net --importmap web_modules/import-map.json server.ts
 ```
+
+権限を厳密に管理するので、多少辛いですね…
 
 deno ならではの工夫として、next.js のクローンなので `pages/*.ts` のエンドポイントをターゲットに SSR する必要があるんですが、webpack や rollup のバンドラを使うのではなく `Deno.bundle(Deno.cwd() + "/pages/foo.ts")` みたいなコードで Deno の内部バンドラをそのまま使って、静的な JS を吐いてブラウザに食わせています。
 
