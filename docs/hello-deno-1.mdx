@@ -39,7 +39,7 @@ deno run --allow-net server.ts
 
 ここはまだ難があるように思います。
 
-Deno ではモジュールシステムやパス解決が純粋な TypeScript と非互換(`.ts` の拡張子資料略ができない) ので、 vscode 拡張などで専用の typescript server を起使う、といったソリューションが試みられています。 で、`axetroy/deno` と `justjavac/deno` があるんですが、どちらも中途半端です。どちらも import-map 対応のオプションがあるように見えるんですが、動きません。ちょっと変なことをすると、すぐ動かなくなります。
+Deno ではモジュールシステムやパス解決が純粋な TypeScript と非互換(`.ts` の拡張子省略ができない) ので、 vscode 拡張などで専用の typescript server を起使う、といったソリューションが試みられています。 で、`axetroy/deno` と `justjavac/deno` があるんですが、どちらも中途半端です。どちらも import-map 対応のオプションがあるように見えるんですが、動きません。ちょっと変なことをすると、すぐ動かなくなります。
 
 deno-ja の slack で聞いた限りでは justjavac の方が公式に近い立ち位置なんですが、 axetroy/deno の fork らしいんですが、まだ axetroy/deno のがちゃんと動いてるみたいです。
 
