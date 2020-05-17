@@ -1,0 +1,107 @@
+---
+title: Hello, Deno v1.0.0
+created: 1589719008195
+---
+
+Deno 1.0.0 がリリースされて、ちょっと遊んでみたので、その感想。
+
+## 圧倒的ゼロインストール感
+
+自分は mac なので `brew install deno` しました。`deno` コマンドが入ります。セットアップはこれで終わり。
+
+GitHub の trending に上がっていた https://github.com/oakserver/oak という web server を試してみます。
+
+```ts
+// server.ts
+import { Application } from "https://deno.land/x/oak/mod.ts";
+const app = new Application();
+
+app.use((ctx) => {
+  ctx.response.body = "Hello World!";
+});
+
+await app.listen({ port: 8000 });
+```
+
+このコードを保存して、実行します
+
+```
+deno run --allow-net server.ts
+```
+
+これだけ。コマンド実行時に `https://deno.land/x/oak/mod.ts` から依存がダウンロードされて、サーバーが立ちます。
+
+ここで、インストールコマンドを何も叩いてないのに注目してください。Deno では実行時に URL が静的に解決されて実行されます。パッケージや `package.json` といったものがありません。
+
+`--allow-net` も特徴的ですね。deno ではデフォルトでは権限が限定されています。ローカルファイルに触るには、 `--allow-read` や `--allow-write` が必要になります。
+
+## 開発環境
+
+ここはまだ難があるように思います。
+
+Deno ではモジュールシステムやパス解決が純粋な TypeScript と非互換(`.ts` の拡張子資料略ができない) ので、 vscode 拡張などで専用の typescript server を起使う、といったソリューションが試みられています。 で、`axetroy/deno` と `justjavac/deno` があるんですが、どちらも中途半端です。どちらも import-map 対応のオプションがあるように見えるんですが、動きません。ちょっと変なことをすると、すぐ動かなくなります。
+
+deno-ja の slack で聞いた限りでは justjavac の方が公式に近い立ち位置なんですが、 axetroy/deno の fork らしいんですが、まだ axetroy/deno のがちゃんと動いてるみたいです。
+
+(そもそも deno やってる人たちは vscode を TS の違反の警告を無視するのになれてるらしく、エディタ支援はない前提っぽいで書いてる人が多い印象)
+
+## モジュールシステム
+
+公式には deno.land/std と、サードパーティ相当の deno.land/x があります
+
+- https://deno.land/std
+- https://deno.land/x
+
+それとは別に、ESM で node の標準ライブラリに頼らずビルドされたコードは import できます。 npm をバックエンドにした CDN としては、以下のようなものがあります。
+
+- [jsDelivr \- A free, fast, and reliable Open Source CDN for npm & GitHub](https://www.jsdelivr.com/) のうち、rollup の ESM ビルドが配布されているもの
+- [UNPKG](https://unpkg.com/) の `?module` での esm build
+- [Pika CDN](https://www.pika.dev/cdn) で ESM 用にビルドされた JS
+
+## Next.js クローンを作ろうとしてみた
+
+[mizchi/toxen](https://github.com/mizchi/toxen) っていうリポジトリで、 next.js っぽいサーバー書いて遊んでました。(まだ実験中です)
+
+技術スタック
+
+- deno
+- snowpack
+- oak
+- preact
+- htm
+
+snowpack は一種のフロントエンド向けのバンドラーなんですが、webpack に頼らずネイティブ ESM で動くモジュールを吐いて、それを importmap を、 deno の importmap として使う、といった方法を選んでみました。
+
+- [Snowpack](https://www.snowpack.dev/)
+- [WICG/import\-maps: How to control the behavior of JavaScript imports](https://github.com/WICG/import-maps)
+
+やってみた感じ、 `import { h } from "preact"` という感じの、比較的 node と似たような書き味で、快適です。
+
+ただ、事前に snowpack でビルドして、動的に `pages/*.ts` を読んで、 `dist/*.js` に吐き出して…とやっていたら、結局こんな感じの実行スクリプトに
+
+```
+snowpack && deno run --unstable --allow-write --allow-read --allow-net --importmap web_modules/import-map.json server.ts
+```
+
+deno ならではの工夫として、next.js のクローンなので `pages/*.ts` のエンドポイントをターゲットに SSR する必要があるんですが、webpack や rollup のバンドラを使うのではなく `Deno.bundle(Deno.cwd() + "/pages/foo.ts")` みたいなコードで Deno の内部バンドラをそのまま使って、静的な JS を吐いてブラウザに食わせています。
+
+あと、 amp + amp-script(worker-dom) で動かしているので、 amp ページでありながら動的に動く画面を作れます。 worker-dom は技術的な詳細はここでは解説しませんが、動的なコンポーネントを初期化するには SSR が必須です。
+
+[Documentation: <amp\-script> \- amp\.dev](https://amp.dev/documentation/components/amp-script/)
+
+React ではなく preact なのは、 amp-script の 150kb 制限をクリアするためです。tsx を使っていなくて htm なのは、preact pragma を使って tsx を書くと React の型がないので、実行時例外になるのをかわすためのワークアラウンドです。
+
+今後の TODO として、動的 URL に対応する、Deno ライブラリとして抽象的にする、export できるようにする、といった方向性があると思ってるんですが、これを本気で開発するかはまだ悩んでいて、もうちょっと Deno 自体が安定してほしい気持ちもありますね。
+
+ただ、このブログのような SSG なら、ランタイムに deno がいないので、比較的安心して採用できる気がしました。
+
+## Universal JavaScript を考え直す
+
+ここまでやってみて、 Deno に対応する、というのは 2 つの水準があると思いました。
+
+- CLI ツールなど向けに、 deno の標準ライブラリを使って、 `.ts` で deno べったりで書き直す
+- Universal な JavaScript として、 rollup でビルドして配布する
+
+要は esm に対応してさえいれば読み込みはできるので、Universal な JavaScript としては、rollup でビルドしていると deno 対応している、と言えなくはないです。npm にあげてしまった後は、npm の CDN である jsdelivr を経由して読み込むといいでしょう。
+
+deno を使っていくかどうかはともかく、 snowpack など esm 前提の実行環境なども増えてるので、この辺を意識しておくと、将来的な可用性が増えるのではないでしょうか。

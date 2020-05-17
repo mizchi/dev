@@ -63,7 +63,7 @@ DefinitelyTyped に PR が出てるが、まだマージされてない。
 - Redux は常に一つでかつすべての状態ありきの思想なので、State とその手続きが宣言される。このせいで、常に使わない State も初期化しないといけない
 - Recoil は状態を依存グラフで表現する。atom とそれを参照する selector があり、selector が atom を購読して反映される
 
-また、 selector への set で atom を非同期に書き換えるというインターフェースになっている。単方向サブスクリプションではなく、双方向。
+また、 selector への set で atom を同期/非同期に書き換えるというインターフェースになっている。実体は atom を実体とした単方向サブスクリプションだが、コード上は双方向にもなりうる。
 
 ## selector が mutable
 
@@ -118,7 +118,7 @@ function TempCelcius() {
 
 これは正直、議論が分かれそうな設計だと思っていて、 vue の computed property などに近いようにみえて、computed property には不可能な副作用も記述できるが、その実装が正しいかどうかは、実装者が責任を持つことになるだろう。
 
-単なる set では atom を直接書き換えたほうがきれいだと思うが、ここで面白いのは、set の実装が非同期の Promise を取れるということだ。
+単なる set では atom を直接書き換えたほうがきれいだと思うが、ここで面白いのは、set の実装が非同期の Promise を取れるということだ。実質 redux middleware で多段 dispatch するときと同じようなコードになる。
 
 ## 非同期な state と Suspense
 
