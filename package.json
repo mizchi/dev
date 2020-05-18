@@ -24,7 +24,7 @@
     "@types/react-dom": "^16.9.7",
     "@types/styled-components": "^5.1.0",
     "amdx-loader": "^0.8.0",
-    "amdxg-cli": "^0.8.2",
+    "amdxg-cli": "^0.8.4",
     "raw-loader": "^4.0.1",
     "rimraf": "^3.0.2",
     "rollup": "^2.9.1",

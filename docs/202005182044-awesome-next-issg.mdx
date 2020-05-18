@@ -1,0 +1,110 @@
+---
+title: Incremental Static Regeneration で実現する次世代のサーバーアーキテクチャ
+created: 1589802285779
+tags: [next, react, ssg]
+---
+
+next.js 9.4 に Incremental Static Regeneration という実験的な新機能があります。
+
+[Blog \- Next\.js 9\.4 \| Next\.js](https://nextjs.org/blog/next-9-4)
+
+パッと見、「段階的な静的サイト生成…？なんのことだろう…」となったのですが、手元で試してみた感じ、これが既存のサーバーの実装アプローチを変える、革命的な機能ではないかと思いました。
+
+解説を書きつつ、どのような応用があるか解説します。
+
+## next.js の Incremental SSG を試してみる
+
+リポジトリはここです。 [mizchi/issg\-playground](https://github.com/mizchi/issg-playground)
+
+解説にあたっては、必要なのはほぼこのファイルだけで、短いのでそのまま貼ります。
+
+```tsx
+// pages/[slug].tsx
+import { GetStaticProps, GetStaticPaths } from "next";
+
+type Props = {
+  slug: string;
+  builtAt: number;
+};
+
+export const getStaticProps: GetStaticProps<Props> = async (ctx) => {
+  return {
+    props: {
+      slug: ctx.params.slug as string,
+      builtAt: Date.now(),
+    },
+    unstable_revalidate: 30,
+  };
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: ["/foo"],
+    fallback: true,
+  };
+};
+
+export default (props: Props) => {
+  return (
+    <>
+      {props.slug}: {props.builtAt}
+    </>
+  );
+};
+```
+
+- `pages/[slug].tsx` は `/*` をハンドルします。
+- `export const getStaticProps` はそのルーティングに来たときのルート要素に渡す props を組み立てます
+- `export const getStaticPaths` はそのルーティングに来たときの、パス一覧を返却します。
+
+これらの機能は元々 `next export` の静的アセットの吐き出しのために、手元のビルド時に一回だけ実行されるものでした。(このブログも、この機能を使って生成されています)
+
+しかし、 Incremental SSG では、このサーバーは静的に吐き出してデプロイされるのではなく、 server or serverless モードでデプロイすることを想定されています。
+静的アセットの吐き出しサーバーを、動的なサーバーとしてデプロイする、とはどういうことでしょうか。
+
+ここで、 `unstable_revalidate: 30` と `fallback: true` に注目してください。
+
+- `getStaticPaths` で `fallback: true` が指定されると、 `paths` で指定されなかったパスも、 `getStaticProps` のロジックに応じて組み立てられます。
+- `getStaticProps` で `unstable_revalidate: 30` のような値を返すと、 30 秒間は静的アセットとして返却されます
+
+ここからが面白くて
+
+- unstable_revalidate: 30` の秒数が経過後、次のリクエストが発生した際に、一旦はキャッシュを返しつつ、バックグラウンドでもう一度そのページを構築
+
+この挙動が面白いですね。
+
+つまりは、静的サイトジェネレータとしてある程度の運用の容易さを担保しつつ、CDN のスケーラビリティを借りて、かつ、ある程度は動的な振る舞いを取れる、ということです。
+
+完全なアプリケーション・サーバーとしては、
+
+## フロントエンドベストプラクティスの実現
+
+自分は [光を超えるためのフロントエンドアーキテクチャ \- Speaker Deck](https://speakerdeck.com/mizchi/guang-wochao-erutamefalsehurontoendoakitekutiya) という発表をしたことがあります。要約すると、パフォーマンス最適化のためには、リクエストを全部アプリケーション・サーバーに到達させてはだめで、 CDN Edge に置いた HTML に当てつつ、キャッシュごとにサロゲートキーを当てて、リソースの更新のたびにプログラマブルなインバリデーションを発行する、というものです。
+
+当時、これを実現できるのは fastly しかありませんでした。
+
+まだプログラマブルなインバリデーションはないのですが、RFC のディスカッションを読む限りは、rauchg と Timer 曰く、もっと多機能なものも考えているらしいので、 それを想定してるように見えます。
+
+[RFC: Incremental Static Regeneration · Discussion \#11552 · zeit/next\.js](https://github.com/zeit/next.js/discussions/11552)
+
+## Vercel / SmartCDN / Next.js のゴールが見えた
+
+正直なところ、 next.js が静的 export に対応した当時は、プロダクトとしての軸がぶれているように感じました。SSR のフレームワークでいきたいのか、 SSG になりたいのか、どっちなのかと。そして自前の PaaS を運用しているのは、よくわからないところがありました。
+
+Vercel (旧名 now.sh) は SmartCDN という機能があります。これはおそらく、この機能を見据えたプログラマブルな CDN として設計されたものだったのでしょう。
+
+Incremental SSG は、NoCode などの Headless CMS のガワとして、next.js を使うことが想定されています。これらの NoCode Backend はお世辞にもスケーラビリティがあるとは言えないものが多く、またレスポンスタイムに難があることが多かったのですが、Incremental SSG モードの Next.js をかぶせることで(初回アクセスをやや犠牲にしつつも) CDN のスケーラビリティの恩恵を受けることができます。
+
+おそらく Vercel + SmartCDN は、next に最適化された CMS バックエンドとして、オールインワンパッケージを提供するのがゴールなのでしょう。
+
+## 未来
+
+とりあえず RFC に fastly の SurrogateKeys 相当のキャッシュタグみたいなものがほしい！とだけ書いておきました。
+
+[RFC: Incremental Static Regeneration · Discussion \#11552 · zeit/next\.js](https://github.com/zeit/next.js/discussions/11552#discussioncomment-14415)
+
+また、ZEIT, あらため Vercel は 20 億円の増資を受けたことで、next.js エコシステムの発展は、より加速していくように思います。
+
+[\(20\) Shu Uesugi さんは Twitter を使っています 「🆕Next\.js の開発元でもある ZEIT はこのたび社名変更し Vercel になりました。 🎉2100 万ドルの資金調達も発表。 👨🏻‍💻 私はご縁があり 2 月に開発者としてジョインしました。 🤔「○○ は今後どうなるの？」というご質問につきましては、こちらの Notion ドキュメントをご一読ください！→ https://t\.co/eCwc23gIzo」 / Twitter](https://twitter.com/chibicode/status/1252745903540105216)
+
+ちょっと前まで、next.js は意見が強いフレームワークで、正直 nuxt のほうが使いやすいよなぁ、と思ってたんですが、こういう感じで攻めてくるのは以外で、びっくりしつつも、応援したい気持ちがあります。

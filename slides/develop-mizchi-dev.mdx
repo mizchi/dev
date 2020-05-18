@@ -1,0 +1,156 @@
+---
+title: next.js で自分のブログを作る
+---
+
+新しく自分のブログとして [mizchi.dev](https://mizchi.dev) を作った話
+
+---
+
+## Lighthouse
+
+![](https://i.gyazo.com/718543e55f8ca7c35e81bb67aa5cfa79.png)
+
+---
+
+## Full AMP
+
+![](https://i.gyazo.com/bcc2d128064304c355d3c776d41a22a8.png)
+
+---
+
+## GA 対応
+
+![](https://gyazo.com/10b9063d30ff5fb73ec2cc5a3b824333.png)
+
+---
+
+## Git から編集ヒストリの生成
+
+![](ehttps://i.gyazo.com/13034861f0afceacf47ad8d8a09f239a.png)
+
+---
+
+## どんなブログがほしかったか
+
+- Lighthouse で満点出したい
+  - => どうせ動かないし CDN 上で静的サイト + Full AMP
+- 普通の Markdown じゃつまんないから MDX で書きたい
+  - => コンパイラごと作った(amdx)
+- サーバーの運用をしたくない
+  - => netlify + 買ったまま忘れてたカスタムドメイン(mizchi.dev)
+- next.js の最適化に乗りたい
+  - => `pages/*.tsx` が公開される仕組みを、そのまま採用
+
+---
+
+## next.js の SSG + AMP モードの採用
+
+```tsx
+// pages/foo.tsx
+export const config = { amp: true };
+export default function Foo() {
+  return <div>foo</div>;
+}
+```
+
+- `amp: true` で常に amp を生成
+- AMP canonical は常に自分自身を指す(のを next.js が勝手にやってくれる)
+
+---
+
+## AMP の plugin を諸々突っ込む
+
+- `amp-social-share` で twitter / facebook / hatena bookmark のシェアに対応
+- `amp-analytics` で GoogleAnalytics 対応
+- rollup + preact + amp-script で、AMP 上で動的なコンポーネントが作れる。後で何かに使う
+
+---
+
+# AMP 用 Markdown Compiler を作ろう！
+
+---
+
+## AMP 環境の Markdown に求められる仕様
+
+- AMP の仕様を満たす
+  - `img` => `amp-img` かつ、 amp layout 仕様を満たす固定幅の要素に
+  - 数式ブロック(`$$ ~ $$`) を amp-mathml に変換
+- コードハイライト: **ランタイムで構文解析できない** ので、コードブロックのハイライトを、コンパイル時に済ませておく必要
+
+---
+
+## MDX について
+
+Markdown 中で import 構文が使える仕様
+
+```
+# Hello, MDX
+
+import Doc from "./doc";
+<Doc />
+```
+
+Markdown ドキュメントから、別の Markdown ドキュメントや、React.Component
+を展開できる。
+シンタックスハイライターなどのエコシステムの都合から、`.mdx`拡張子をそのまま採用したい。
+
+---
+
+## AMDX: Accelarated MDX
+
+- [mizchi/amdx: Accelarated MDX](https://github.com/mizchi/amdx)
+- remark ベースで `@mdx-js/mdx` を元に拡張 (中で使ってる babel plugin はそのままなので、構文は互換)
+- refract(prismjs parser) で、コンパイル時にコードブロックをトークン化
+- +色々 (toc, frontmatter や WebWorker で動くように等)
+
+---
+
+## AMDXG: AMDX による静的サイト生成ツールキット
+
+- amdx-loader: amdx の webpack 用のローダー
+- amdxg-components: ブログ用のデフォルトコンポーネント集。使わなくてもいい
+- amdxg-cli: ページの雛形や各種メタデータ生成用の CLI
+- amdxg-boilerplate: ただのボイラープレート。(注意: まだ安定してない。頻繁に変わる)
+
+---
+
+## 使い方
+
+```
+$ npx degit mizchi/mdxx/templates/blog my-blog
+$ cd my-blog
+$ git init && git commit -m "Init" # 編集履歴生成に git history を使う
+$ edit amdxg.config.js # メタデータを編集
+
+# 書く
+$ npm i -g amdxg-cli
+$ amdxg new:page new-article # docs/new-article.mdx に記事の雛形を生成
+$ npx run dev # localhost:3000 でプレビューしながら記事を編集
+
+# build / deploy
+
+$ npx run build # out/ に静的サイトを生成
+
+# 要: netlify account
+$ npm i -g netlify-cli
+$ netlify deploy -d out --prod
+```
+
+---
+
+## 残 TODO
+
+- CSS が雑なのでちゃんとやる
+- amxd のプレビュー環境を作る (mdbuf.netlify.com ベースで)
+- amdx|amdxg のドキュメントサイトを作る
+- vercel 上で任意のバックエンド(CMS)から Incremental SSG する例を作る
+
+(余談だが、 9.4 新機能の Incremental SSG がとても良いですね…)
+
+---
+
+## おわり
+
+Google 検索結果からの遷移が爆速 💪
+
+CSS が苦手なので助けて

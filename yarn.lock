@@ -1556,10 +1556,10 @@ amdx@^0.8.0:
     unist-util-visit "^2.0.2"
     yaml "^1.8.3"
 
-amdxg-cli@^0.8.2:
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/amdxg-cli/-/amdxg-cli-0.8.2.tgz#02da2749db9dc69d246c9bf4918386f174de9eb5"
-  integrity sha512-wGRBsd6V5FEWp3ZobfvjojpS3bhLIg3Q1961mUHuS0rBKVBvJB8MFAaJ5GgXk8QgDHVBH5wBE6k4oKxHk/EJ2w==
+amdxg-cli@^0.8.4:
+  version "0.8.4"
+  resolved "https://registry.yarnpkg.com/amdxg-cli/-/amdxg-cli-0.8.4.tgz#49e7b6a967417fae790709323177a63d0c98a71b"
+  integrity sha512-uzw1s10F1O/EpyN664v7gBz1vkp8xqQ8q+CgQW3ZjuX87WSmncEWpS+O/Mx7xuB9al1LFnts1huwuPuGifb77A==
   dependencies:
     fs-extra "^9.0.0"
     lodash.sortby "^4.7.0"
