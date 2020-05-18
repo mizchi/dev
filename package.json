@@ -6,7 +6,7 @@
     "dev": "amdxg build && next"
   },
   "dependencies": {
-    "amdx": "^0.8.0",
+    "amdx": "^0.8.5",
     "amdx-runner": "^0.8.0",
     "amdxg-components": "^0.8.6",
     "next": "^9.4.0",

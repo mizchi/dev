@@ -1463,7 +1463,7 @@ amdx-types@^0.8.0:
   resolved "https://registry.yarnpkg.com/amdx-types/-/amdx-types-0.8.0.tgz#3ce7f2a4f3804c1dd5c7b48e5a322b8455d45787"
   integrity sha512-Xqz2+Kq3SEWpVCDoEkm1oDPeeLHHyI7nL/wtQwkw+fkUNjO8Va3sVfrsutHcSo/eS+oZVkavwQHylqobjmU/kw==
 
-amdx@^0.8.0, amdx@^0.8.5:
+amdx@^0.8.5:
   version "0.8.5"
   resolved "https://registry.yarnpkg.com/amdx/-/amdx-0.8.5.tgz#26461f6ce814226f71eca4e268667023382d11a9"
   integrity sha512-a10X5TghKi3qTjhs5UcdyyYb+HKDEC9mYTIh6KzG5p5pwMkevxgD7j9qN9sqWt4GaWg69+AJ4ggI9Q9tBXcd1w==

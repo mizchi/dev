@@ -2,7 +2,9 @@
 title: next.js で自分のブログを作る
 ---
 
-新しく自分のブログとして [mizchi.dev](https://mizchi.dev) を作った話
+# next.js で自分のブログを作る
+
+自分のブログとして [mizchi.dev](https://mizchi.dev) を作った話
 
 ---
 
@@ -26,20 +28,25 @@ title: next.js で自分のブログを作る
 
 ## Git から編集ヒストリの生成
 
-![](ehttps://i.gyazo.com/13034861f0afceacf47ad8d8a09f239a.png)
+![](https://i.gyazo.com/13034861f0afceacf47ad8d8a09f239a.png)
 
 ---
 
 ## どんなブログがほしかったか
 
 - Lighthouse で満点出したい
-  - => どうせ動かないし CDN 上で静的サイト + Full AMP
 - 普通の Markdown じゃつまんないから MDX で書きたい
-  - => コンパイラごと作った(amdx)
 - サーバーの運用をしたくない
-  - => netlify + 買ったまま忘れてたカスタムドメイン(mizchi.dev)
 - next.js の最適化に乗りたい
-  - => `pages/*.tsx` が公開される仕組みを、そのまま採用
+
+---
+
+## 作った
+
+- どうせ動かないし CDN 上で静的サイト + Full AMP
+- MDX コンパイラを自作 (amdx)
+- netlify + 買ったまま忘れてたカスタムドメイン(mizchi.dev)
+- `pages/*.tsx` が公開される仕組みを、そのまま採用
 
 ---
 
