@@ -71,19 +71,19 @@ export default (props: Props) => {
 
 - unstable_revalidate: 30` の秒数が経過後、次のリクエストが発生した際に、一旦はキャッシュを返しつつ、バックグラウンドでもう一度そのページを構築
 
-この挙動が面白いですね。
+この挙動が面白いですね。つまりは stale-while-revalidate の挙動です。
 
 つまりは、静的サイトジェネレータとしてある程度の運用の容易さを担保しつつ、CDN のスケーラビリティを借りて、かつ、ある程度は動的な振る舞いを取れる、ということです。
 
-完全なアプリケーション・サーバーとしては、
+[https://try-issg.now.sh/bar](https://try-issg.now.sh/bar) にデプロイしてあります。この挙動を念頭に起きながら、アクセスしてみてください。
 
 ## フロントエンドベストプラクティスの実現
 
 自分は [光を超えるためのフロントエンドアーキテクチャ \- Speaker Deck](https://speakerdeck.com/mizchi/guang-wochao-erutamefalsehurontoendoakitekutiya) という発表をしたことがあります。要約すると、パフォーマンス最適化のためには、リクエストを全部アプリケーション・サーバーに到達させてはだめで、 CDN Edge に置いた HTML に当てつつ、キャッシュごとにサロゲートキーを当てて、リソースの更新のたびにプログラマブルなインバリデーションを発行する、というものです。
 
-当時、これを実現できるのは fastly しかありませんでした。
+当時、これを実現できるのは fastly しかありませんでした。これからは vercel も似たようなことが可能なります。
 
-まだプログラマブルなインバリデーションはないのですが、RFC のディスカッションを読む限りは、rauchg と Timer 曰く、もっと多機能なものも考えているらしいので、 それを想定してるように見えます。
+まだプログラマブルなインバリデーションはないのですが、RFC のディスカッションを読む限りは、開発者の rauchg と Timer 曰く、もっと多機能なものも考えているらしいので、 それを想定してるように見えます。
 
 [RFC: Incremental Static Regeneration · Discussion \#11552 · zeit/next\.js](https://github.com/zeit/next.js/discussions/11552)
 
@@ -93,11 +93,11 @@ export default (props: Props) => {
 
 Vercel (旧名 now.sh) は SmartCDN という機能があります。これはおそらく、この機能を見据えたプログラマブルな CDN として設計されたものだったのでしょう。
 
-Incremental SSG は、NoCode などの Headless CMS のガワとして、next.js を使うことが想定されています。これらの NoCode Backend はお世辞にもスケーラビリティがあるとは言えないものが多く、またレスポンスタイムに難があることが多かったのですが、Incremental SSG モードの Next.js をかぶせることで(初回アクセスをやや犠牲にしつつも) CDN のスケーラビリティの恩恵を受けることができます。
+Incremental SSG は、NoCode や Headless CMS のガワとして、next.js を使うことが想定されています。これらの NoCode Backend はお世辞にもスケーラビリティがあるとは言えないものが多く、またレスポンスタイムに難があることが多かったのですが、Incremental SSG モードの Next.js をかぶせることで(初回アクセスをやや犠牲にしつつも) CDN のスケーラビリティの恩恵を受けることができます。
 
 おそらく Vercel + SmartCDN は、next に最適化された CMS バックエンドとして、オールインワンパッケージを提供するのがゴールなのでしょう。
 
-## 未来
+## next.js に投資したいと思った
 
 とりあえず RFC に fastly の SurrogateKeys 相当のキャッシュタグみたいなものがほしい！とだけ書いておきました。
 
@@ -107,4 +107,4 @@ Incremental SSG は、NoCode などの Headless CMS のガワとして、next.js
 
 [\(20\) Shu Uesugi さんは Twitter を使っています 「🆕Next\.js の開発元でもある ZEIT はこのたび社名変更し Vercel になりました。 🎉2100 万ドルの資金調達も発表。 👨🏻‍💻 私はご縁があり 2 月に開発者としてジョインしました。 🤔「○○ は今後どうなるの？」というご質問につきましては、こちらの Notion ドキュメントをご一読ください！→ https://t\.co/eCwc23gIzo」 / Twitter](https://twitter.com/chibicode/status/1252745903540105216)
 
-ちょっと前まで、next.js は意見が強いフレームワークで、正直 nuxt のほうが使いやすいよなぁ、と思ってたんですが、こういう感じで攻めてくるのは以外で、びっくりしつつも、応援したい気持ちがあります。
+ちょっと前まで、next.js は意見が強いフレームワークで、正直 nuxt のほうが使いやすいよなぁ、と思ってたんですが、こういう感じで攻めてくるのは以外で、びっくりしつつも、応援したい気持ちがありますね。

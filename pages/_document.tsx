@@ -19,7 +19,7 @@ export default class MyDocument extends Document {
           <style
             key="custom"
             dangerouslySetInnerHTML={{
-              __html: css,
+              __html: css + `\n.markdown-body ul { list-style: disc; }`,
             }}
           />,
           ...sheet.getStyleElement(),
