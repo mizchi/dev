@@ -8,7 +8,7 @@
   "dependencies": {
     "amdx": "^0.8.5",
     "amdx-runner": "^0.8.0",
-    "amdxg-components": "^0.8.9",
+    "amdxg-components": "^0.8.10",
     "next": "^9.4.0",
     "preact": "^10.4.1",
     "preact-render-to-string": "^5.1.8",
