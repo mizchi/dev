@@ -6,6 +6,14 @@ title: next.js で自分のブログを作る
 
 自分のブログとして [mizchi.dev](https://mizchi.dev) を作った話
 
+at [隅田川\.js \#1\(オンライン\) \- connpass](https://sumidagawajs.connpass.com/event/167632/)
+
+---
+
+## 何を作ったか
+
+このブログ自身(mizchi.dev)。スライドツールも突貫で自作
+
 ---
 
 ## Lighthouse
@@ -47,6 +55,14 @@ title: next.js で自分のブログを作る
 - MDX コンパイラを自作 (amdx)
 - netlify + 買ったまま忘れてたカスタムドメイン(mizchi.dev)
 - `pages/*.tsx` が公開される仕組みを、そのまま採用
+
+---
+
+## (本音
+
+- next.js で静的サイト運用の知見を貯めたい
+- AMP の知見を貯めたい
+- React でガシガシ動く作例を置く場所を、自分のドメインで用意したい
 
 ---
 
@@ -121,9 +137,91 @@ Markdown ドキュメントから、別の Markdown ドキュメントや、Reac
 
 ---
 
-## 使い方
+## ドキュメントの解析
+
+`docs/*.mdx` の frontmatter を解析
+
+```yaml
+---
+title: hello
+created: 1589877769475
+tags: [react, next, amp]
+---
 
 ```
+
+- タイトルを日付順に並べた `gen/pages.json` を生成
+- タグで逆引きする用の `gen/tagmap.json` を生成
+- git log のコミットログから `gen/*.history.json` を生成
+
+---
+
+## Index
+
+- `gen/pages.json` からページ一覧を表示
+- `gen/tagmap.json` からタグ一覧を表示
+
+## ドキュメントの表示
+
+- `next.config.js` の `webpack` で `.mdx` 拡張子は amdx-loader (自作) を通すようにする
+- next.js の danymic routing で 対応する slug の component を動的に返す
+
+```tsx
+// pages/[slug].tsx
+export const getStaticProps: GetStaticProps = async (props) => {
+  const slug = props.params.slug;
+  const { default: Doc, toc, frontmatter } = await import(
+    `../docs/${slug}.mdx`
+  );
+  const { default: history } = await import(`../gen/${slug}.history.json`);
+  return {
+    props: {
+      slug,
+      toc,
+      history,
+      tags: frontmatter.tags || [],
+      frontmatter: frontmatter || { title: slug, created: 0, tags: [] },
+      html: ReactDOMServer.renderToStaticMarkup(<Doc amp />),
+    } as Props,
+  };
+};
+```
+
+後は amdxg-components で用意したコンポーネントに突っ込んで表示
+
+---
+
+## タグページ
+
+- `gen/tagmap.json` から `/tags/react` のようなページを生成して表示
+
+```tsx
+// pages/tags/[tag].tsx
+export function getStaticPaths() {
+  const paths = Object.keys(tagmap).map((tag) => {
+    return `/tags/${tag}`;
+  });
+  return {
+    paths,
+    fallback: false,
+  };
+}
+export const getStaticProps: GetStaticProps = async (props) => {
+  const tag = props.params.tag;
+  return {
+    props: {
+      tagName: tag,
+      pages: tagmap[tag as any],
+    } as Props,
+  };
+};
+```
+
+---
+
+## 自分のブログを作る
+
+```bash
 $ npx degit mizchi/mdxx/templates/blog my-blog
 $ cd my-blog
 $ git init && git commit -m "Init" # 編集履歴生成に git history を使う
@@ -145,14 +243,18 @@ $ netlify deploy -d out --prod
 
 ---
 
-## 残 TODO
+## デモ
 
-- CSS が雑なのでちゃんとやる
-- amxd のプレビュー環境を作る (mdbuf.netlify.com ベースで)
-- amdx|amdxg のドキュメントサイトを作る
+---
+
+## 今後やること
+
+- CSS が雑
+- amxd のプレビュー環境 (mdbuf.netlify.com ベース)
+- ドキュメントサイト
 - vercel 上で任意のバックエンド(CMS)から Incremental SSG する例を作る
 
-(余談だが、 9.4 新機能の Incremental SSG がとても良いですね…)
+[Incremental Static Regeneration で実現する次世代のサーバーアーキテクチャ \- mizdev](https://mizchi.dev/202005182044-awesome-next-issg)
 
 ---
 
@@ -160,4 +262,4 @@ $ netlify deploy -d out --prod
 
 Google 検索結果からの遷移が爆速 💪
 
-CSS が苦手なので助けて
+(CSS が苦手なので助けて)

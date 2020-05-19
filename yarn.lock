@@ -1499,10 +1499,10 @@ amdxg-cli@^0.8.4:
     meow "^7.0.0"
     xml-js "^1.6.11"
 
-amdxg-components@^0.8.6:
-  version "0.8.6"
-  resolved "https://registry.yarnpkg.com/amdxg-components/-/amdxg-components-0.8.6.tgz#feed499d02a8f9a225b5ea2ff340c3391b0e1942"
-  integrity sha512-ZZ2NINUn58WT0VCYIgOxv96QCw53+Ad7DCegiZXaVBRJgotBnku80/9YnDqbfZIu6f0LgEwRzTGrsq0Y8v4r1A==
+amdxg-components@^0.8.8:
+  version "0.8.8"
+  resolved "https://registry.yarnpkg.com/amdxg-components/-/amdxg-components-0.8.8.tgz#87172b04213c2430b476b1b0aa1903ff5ea4bab0"
+  integrity sha512-BtHDkxiLJf3nAZEZXY2F9OAh3GSkdFBdxSuiOzRHVUqtvWYqd1dsuFYgTJTbgV9cT7F1MOI9O1hSLpHsEKLfqA==
   dependencies:
     cssnano "^4.1.10"
     date-fns "^2.13.0"
