@@ -161,6 +161,8 @@ tags: [react, next, amp]
 - `gen/pages.json` からページ一覧を表示
 - `gen/tagmap.json` からタグ一覧を表示
 
+---
+
 ## ドキュメントの表示
 
 - `next.config.js` の `webpack` で `.mdx` 拡張子は amdx-loader (自作) を通すようにする
@@ -219,11 +221,11 @@ export const getStaticProps: GetStaticProps = async (props) => {
 
 ---
 
-## 自分のブログを作る
+## 自分の環境で遊ぶ
 
 ```bash
-$ npx degit mizchi/mdxx/templates/blog my-blog
-$ cd my-blog
+$ npx degit mizchi/mdxx/templates/blog myblog
+$ cd myblog
 $ git init && git commit -m "Init" # 編集履歴生成に git history を使う
 $ edit amdxg.config.js # メタデータを編集
 
