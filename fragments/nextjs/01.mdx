@@ -1,0 +1,128 @@
+# 第 1 章: Hello, Next.js!
+
+## インストールと環境構築
+
+node/npm のインストール
+
+[ダウンロード \| Node\.js](https://nodejs.org/ja/download/)
+
+vscode のインストール
+
+[Visual Studio Code – コード エディター \| Microsoft Azure](https://azure.microsoft.com/ja-jp/products/visual-studio-code/)
+
+## next.js プロジェクトの作成
+
+TODO: Windows での環境構築の説明
+
+ターミナルアプリを起動するか、 vscode 内で `Terminal > New Terminal` でターミナルを起動してください
+
+```
+$ mkdir hello-next-app
+$ cd hello-next-app
+$ npm init -y
+
+# ライブラリのダウンロード
+$ npm install next react react-dom --save
+$ code . # vscode でプロジェクトを開く
+$ code pages/index.js # エディタで開く
+```
+
+`pages/index.js` を次のように編集してください
+
+```jsx
+export default () => {
+  return <h1>Hello, Next</h1>;
+};
+```
+
+ここでは、JavaScript の標準仕様に含まれない jsx という文法を使っています。詳しくは後で解説します。一旦は、ただの HTML を JavaScript の中で書くテンプレート記法だと思ってください。
+
+この時点では、こういうファイル構成になっているはずです。
+
+```
+node_modules/
+pages/
+  index.js
+package-lock.json
+package.json
+```
+
+## next サーバーの起動
+
+```
+$ npx next
+```
+
+ブラウザを開いて、 `http://localhost:3000/` を入力してください
+
+次の画面が見えたら成功です。
+
+TODO: 画像を貼る
+
+## 解説
+
+next.js は `pages/foo.js` というファイルを作成すると、 nqext は `/foo` という URL にそのファイルで `export default` されたコンポーネントを表示します。
+
+今回作成した `pages/index.js` というファイル名は少し特別扱いされていて、`/index` もしくは `/` に対応します。
+
+ついでに `/about` という URL のページを作ってみましょう。
+
+```jsx
+// pages/about.js
+export default () => {
+  return (
+    <div>
+      <h1>About</h1>
+      <p>built by next.js</p>
+    </div>
+  );
+};
+```
+
+これで、ブラウザで `http://localhost:3000/about` というページにアクセスできるようになります。
+
+next.js の基本的な規約として `pages/` 以下に置いたファイルの、「ファイル名から拡張子を省いたもの」が、URL に対応します。
+
+## vercel に公開してみよう
+
+vercel は next.js の開発元が運営しているホスティングサービスです。vercel の提供する CLI ツールを使って、 next.js アプリケーションを vercel に公開してみましょう。
+
+```
+$ npm install -g vercel
+
+$ vercel
+# ユーザー登録/メールアドレス が求められるので入力
+Vercel CLI 19.0.1
+? Set up and deploy “~/plg/hello-next”? [Y/n] y
+? Which scope do you want to deploy to? mizchi
+? Link to existing project? [y/N] n
+? What’s your project’s name? next-js-tutorial
+? In which directory is your code located? ./
+Auto-detected project settings (Next.js):
+- Build Command: `npm run build` or `next build`
+- Output Directory: Next.js default
+- Development Command: next dev --port $PORT
+? Want to override the settings? [y/N] N
+🔗  Linked to mizchi/next-js-tutorial (created .vercel and added it to .gitignore)
+🔍  Inspect: https://vercel.com/mizchi/next-js-tutorial/2yh1nfshh [3s]
+✅  Production: https://next-js-tutorial-iota.now.sh [copied to clipboard] [31s]
+📝  Deployed to production. Run `now --prod` to overwrite later (https://zeit.ink/2F).
+💡  To change the domain or build command, go to https://zeit.co/mizchi/next-js-tutorial/settings
+
+$ vercel --prod
+Vercel CLI 19.0.1
+🔍  Inspect: https://vercel.com/mizchi/next-js-tutorial/2yh1nfshh [2s]
+✅  Production: https://next-js-tutorial-iota.now.sh [copied to clipboard] [4s]
+```
+
+これは自分の環境での実行例です。最後に表示された、 Production の URL を開いてみてください。(ここでは [https://next-js-tutorial-iota.now.sh/](https://next-js-tutorial-iota.now.sh/)) を開いてみてください。
+
+この URL は誰でもアクセスすることができます。つまり、あなたが作ったウェブサイトが vercel 上で公開されました！おめでとうございます！
+
+## 解説しなかったこと
+
+- npm とはなにか package.json とはなにか
+- next.js がどのようにうごいているのか
+- React とはなにか
+- JSX の文法
+- vercel はどのように動いているのか

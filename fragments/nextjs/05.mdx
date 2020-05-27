@@ -1,0 +1,148 @@
+# 第 5 章: Server Side Node.js と React SSR
+
+## はじめに
+
+node.js はフロントエンドツールチェインを扱うものとして扱ってきましたが、この章では Server Side の言語としての側面をやっていきつつ、ここまでやってきた React と協調する SSR という技術を紹介します。
+
+先に言っておきますが、この章の内容は難しいですし、next.js というものを扱うにあたって、実際必須ではありません。ただ、知っておかないと next.js のありがたみも半減します。
+
+next.js がやってくれる SSR を、next.js でやりながら紹介しつつ、その難易度を感じることを目的とします。
+
+## express の環境構築
+
+```
+npm install express --save
+npm install @types/express --save-dev
+```
+
+```ts
+import express from "express";
+const app = express();
+
+app.get<{ id: string }, { foo: number }>("/foo/:id", (req, res) => {
+  res.json({
+    foo: 1,
+  });
+});
+
+app.listen(3000, () => {
+  console.log("server strated!");
+});
+```
+
+## SSR
+
+```tsx
+// server.tsx
+import React from "react";
+import ReactDOMServer from "react-dom/server";
+import express from "express";
+import path from "path";
+
+const app = express();
+
+type State = { value: 0 };
+
+function Html(props: { App: React.ComponentType; initialState: State }) {
+  const html = <props.App {...props.initialState} />;
+  return (
+    <html>
+      <body>
+        <script
+          dangerouslySetInnerHtml={{
+            __html: `window.__initialState = ${JSON.stringify(
+              props.initialState
+            )}`,
+          }}
+        />
+        <div id="root" dangerouslySetInnerHtml={{ __html: html }} />
+        <script src="/main.js" />
+      </body>
+    </html>
+  );
+}
+
+// webpack の出力ディレクトリをマウント
+app.use(express.static(path.join(__dirname, "dist")));
+app.get<{ id: string }>("/:id", (req, res) => {
+  res.send();
+});
+
+app.listen(3000, () => {
+  console.log("server strated!");
+});
+```
+
+## Client Side Hydration
+
+```tsx
+// client/index.tsx
+import React from "react";
+import ReactDOM from "react-dom";
+import { App } from "./App";
+
+ReactDOM.hydrate(
+  <App {...window.__initialState} />,
+  document.querySelector("#root")
+);
+```
+
+```tsx
+// server.tsx
+import React from "react";
+import ReactDOMServer from "react-dom/server";
+import express from "express";
+import path from "path";
+import { App } from "./client/App";
+
+const app = express();
+
+type State = { value: string };
+
+function Html(props: { App: React.ComponentType; initialState: State }) {
+  const html = <props.App {...props.initialState} />;
+  return (
+    <html>
+      <body>
+        <script
+          dangerouslySetInnerHtml={{
+            __html: `window.__initialState = ${JSON.stringify(
+              props.initialState
+            )}`,
+          }}
+        />
+        <div id="root" dangerouslySetInnerHtml={{ __html: html }} />
+        <script src="/main.js" />
+      </body>
+    </html>
+  );
+}
+
+// webpack の出力ディレクトリをマウント
+app.use(express.static(path.join(__dirname, "dist")));
+app.get<{ id: string }>("/:id", (req, res) => {
+  res.send(
+    ReactDOMServer.renderToStaticMarkup(
+      <Html App={App} initialValue={{ id: req.params.id }} />
+    )
+  );
+});
+
+app.listen(3000, () => {
+  console.log("server strated!");
+});
+```
+
+同じ `client/App` という Component 、同じ `initialState` を使って、クライアントとサーバーで同じものを 2 回 render しています。 `initialState` をクライアントに渡すのが肝で、これによってクライアントでサーバーと同じものを再現しています。
+
+ここで難しいのが、 `ReactDOM.hydarate(...)` が成功するには、 SSR と CSR の実行が完全に一致する必要がある、ということです。もしレンダリングの過程に乱数や `Date.now()`のような時間データが混じったり、また環境によって異なるグローバル変数のアクセスが混ざったりしていると、Hydration は失敗して、初期状態の SSR の結果を破棄して CSR を再度実行します。
+
+## SSR は何のため？
+
+1. SEO 最適化
+2. FMP 最適化
+3. AMP 対応
+
+### SEO 最適化
+
+現状の Google Bot は即座に JavaScript を実行してくれません。SPA を作る際に問題になるのは、

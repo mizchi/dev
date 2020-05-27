@@ -1,0 +1,98 @@
+---
+title: React Context を用いた簡易 Flux
+created: 1590563363484
+tags: []
+---
+
+## 課題
+
+- redux を引っ張り出すと大仰になる。Context 下に共有ステートを持ってそこに setState できるだけでよい。
+- なので、次の 2 つを用意する
+  - 現在の state を参照する `const appState = useAppState()`
+  - 現在の state を更新する `const setAppState = useSetAppState()`
+- `React.useState()` と違って分割している理由は、主にパフォーマンス上の理由
+  - 大域な参照なので、可能な限り参照したくない
+  - `setState()` の API は `(prevState: State) => State` も取れるので、状態更新用途に限ってはそもそも `useAppState()` せずに済むことが多い
+- でも毎回書いてるけどボイラープレート感強い上に忘れるのでここにメモする
+
+## 毎回書いてるボイラープレート
+
+```tsx
+// src/contexts/AppStateContext.tsx
+import React, { Dispatch, SetStateAction, useContext, useState } from "react";
+
+export type AppState = {
+  value: number;
+};
+
+const initialState = {
+  value: 0,
+};
+
+const AppStateContext = React.createContext<AppState>(initialState);
+const SetAppStateContext = React.createContext<
+  Dispatch<SetStateAction<AppState>>
+>(() => {});
+
+export function useAppState() {
+  return useContext(AppStateContext);
+}
+export function useSetAppState() {
+  return useContext(SetAppStateContext);
+}
+
+export function AppStateProvider(props: {
+  initialState?: AppState;
+  children: React.ReactNode;
+}) {
+  const [state, setState] = useState<AppState>(
+    props.initialState ?? initialState
+  );
+  return (
+    <AppStateContext.Provider value={state}>
+      <SetAppStateContext.Provider value={setState}>
+        {props.children}
+      </SetAppStateContext.Provider>
+    </AppStateContext.Provider>
+  );
+}
+```
+
+## 使い方
+
+```tsx
+import React from "react";
+import ReactDOM from "react-dom";
+import {
+  AppStateProvider,
+  useAppState,
+  useSetAppState,
+} from "./contexts/AppStateContext";
+
+function Counter() {
+  const state = useAppState();
+  const setAppState = useSetAppState();
+  return (
+    <div>
+      {state.value}
+      <button
+        onClick={() => {
+          setAppState((s) => ({ value: s.value + 1 }));
+        }}
+      >
+        ++
+      </button>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AppStateProvider>
+      <Counter />
+    </AppStateProvider>
+  );
+}
+
+ReactDOM.render(<App />, document.querySelector("#root"));
+```

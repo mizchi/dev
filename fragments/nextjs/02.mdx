@@ -1,0 +1,74 @@
+# 第 2 章: TypeScript
+
+## TypeScript プロジェクト
+
+```
+$ mkdir hello-typescript
+$ cd hello-typescript
+$ npm install --save-dev typescript
+$ npx tsc --init
+
+$ code .
+$ code src/index.ts
+```
+
+```ts
+const x: number = 1;
+console.log(x);
+```
+
+`: number` の部分が TypeScript による文法拡張です。
+
+これを次のように書き換えてみましょう
+
+```ts
+const x: number = "hello"; // エラー
+console.log(x);
+```
+
+TODO: 例外の画像
+
+この規模感なら嬉しさがわかりづらいですが、大きな規模のプロジェクトでは、 import / export されたモジュールの型の検査が難しくなります。これを TypeScript を導入することで、事前に違反を検知できるようになります。
+
+型にはドキュメントとしての役割もあります。プログラミング初心者には手数が増えるだけで、まだ型の必要性はわかりづらいかもしれませんが、現状 node.js / フロントエンドのベストプラクティスとして TypeScript の採用はほぼ必須となっています。最初から慣れていくことをおすすめします。
+
+本テキストでは、以下 TypeScript による型を付けながら解説していくこととします。
+
+## TypeScript の型システム
+
+TODO: TBD
+
+[JavaScript \- TypeScript Deep Dive 日本語版](https://typescript-jp.gitbook.io/deep-dive/recap)
+
+## TypeScript の責務
+
+- TypeScript の拡張構文を除去する
+- 型を静的検査をする
+- Language Server Protocol を IDE に提供し、補完を行う
+
+よく誤解されがちな TypeScript の特徴として、 TypeScript の型は実行時の処理に何ら影響を与えません。つまりエラーがおきたときに、型だけ書き換えてそのエラーが治ることはありません。
+
+また、型エラーがないとしても、実行時の処理を完全に保証するものではありません。例を出します。
+
+```ts
+const obj: { [key: string]: string } = {};
+obj.x = "foo";
+const bar = obj.bar;
+console.log(bar.length); // 実行時エラー
+```
+
+これは、 `{ [key: string]: string }` という型は、「 key に string を取り、 value に string を取る Object 型 」 という意味になるのですが(ちなみに JS では `{}` は `new Object()` と同じ意味)、JavaScript の言語仕様では、未定義のフィールドへのアクセスは例外ではなく、 `undefined` を返すという仕様があります。
+
+メジャーなユースケースのためにこの宣言自体は許容されますが、実行時エラーが発生しないことを保証するものではありません。より厳密に型を付けたければ、次のように宣言する必要があります。
+
+```ts
+const obj: { [key: string]: string | undefined } = {};
+```
+
+これは、「 key に string を取り、 value に string または undefined を取る Object 型 」 です。
+
+これは、JavaScript に後付で型制約を取り入れたため、現実的な範囲で型がゆるく宣言できるような余地が残されています。これには賛否両論があります。
+
+## Next.js の TypeScript
+
+next.js は実は typescript compiler を使っていません。代わりに、 babel と `@babel/preset-typescript` を使って型の除去をしています。これには様々な都合があるんですが、

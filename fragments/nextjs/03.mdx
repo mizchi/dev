@@ -1,0 +1,308 @@
+# 第 3 章: webpack
+
+## 近年の node.js の位置づけ
+
+node.js は サーバーサイド JavaScript という側面もありますが、フロントエンドツールチェイン(補助ツール)を開発としてのスクリプト言語としての役割もあります。webpack, postcss, typescript などのツールが Node.js によって書かれています。
+
+ここでは、最も使われている webpack を解説していきます。
+
+## webpack を使ってみる
+
+フロントエンドでは webpack というツールを使ってソースコードを一つのファイルに変換することが一般的です。
+
+```
+$ mkdir hello-webpack
+$ cd hello-webpack
+$ code .
+$ npm init -y # package.json のボイラープレートを生成
+$ npm install --save-dev webpack webpack-cli
+$ code src/index.js
+```
+
+```js
+// src/foo.js
+export const x = "foo";
+```
+
+```js
+// src/index.js
+import { x } from "./foo";
+console.log(foo); // foo を表示
+```
+
+ES Modules を使った単純なコード例です。 `pages/index.js` から見て `./foo` という相対パスを解決したファイル(の拡張子省略)の, `x` という名前の export symbol を解決します。
+
+これをターミナルで実行します。
+
+```
+$ npx webpack
+Hash: 387d12acbec6e83159a8
+Version: webpack 4.43.0
+Time: 63ms
+Built at: 2020/05/21 23:49:18
+  Asset       Size  Chunks             Chunk Names
+main.js  970 bytes       0  [emitted]  main
+Entrypoint main = main.js
+[0] ./src/index.js + 1 modules 73 bytes {0} [built]
+    | ./src/index.js 47 bytes [built]
+    | ./src/foo.js 26 bytes [built]
+
+WARNING in configuration
+The 'mode' option has not been set, webpack will fallback to 'production' for this value. Set 'mode' option to 'development' or 'production' to enable defaults for each environment.
+You can also set it to 'none' to disable any default behavior. Learn more: https://webpack.js.org/configuration/mode/
+```
+
+dist/main.js が生成されました。
+
+ここで使った npx コマンドが何かというと、 npm からダウンロードしたモジュールは、実行可能な CLI コマンドを提供していることがあります。
+ファイル実体は `node_modules/.bin` 以下にあり、 npx はここにパスを通して実行しているようなものだと思ってください。
+
+これを実行してみましょう。
+
+```
+$ node dist/main.js
+foo
+```
+
+実行されました。
+
+webpack をよく知ってる人ほど違和感を持ったかもしれません。`webpack.config.js` を書いていませんね。
+
+ここでは、webpack の暗黙な既定値を利用しています。無設定だと `src/index.js` をターゲットに、 `dist/main.js` にファイルを出力します。
+
+## なぜ webpack で結合するのか？
+
+複数の目的があります。
+
+- 古いブラウザで動くようにするため。
+- パフォーマンスのため
+- node module を扱うため
+- 標準にない loader を使うため
+
+### 目的 1: 古いブラウザで動くようにするため
+
+Internet Exproler のような古いブラウザは、ES Modules をサポートしていません。このフロントエンド開発者を長らく悩ませてきたブラウザは、2020 年現在、世界においては 1.5%、日本において 5% ほどのシェアがあります。
+
+参考: [statcounter](https://gs.statcounter.com/browser-market-share/desktop/japan/#monthly-202001-202004)
+
+多くのサービス提供者は、まだこれらの数値を重く見ています。開発者が意思決定できる場合を除いて、Internet Exproler をサポートすることを求められることが残念ながらほとんどです。(場合によっては、これは思考停止的な慣習である場合もあります。その場合 ↑ の値を見せてください)
+
+ユーザーのリテラシーが高く見積もれる開発者用のツールや、モバイルユーザーのみを想定したサービスでは、IE 対応を落とすことができるかもしれません。IE を落とすことで増える技術的な選択肢を重要視するなら、それを説得材料にすることも可能です。
+
+いずれにせよ、開発者の意思決定の外にある要件なので、一度手軽な環境で試しておき、そのサポートコストがどれぐらいになるか見積もっておくのは大事です。この姿勢は IE 対応に限らず、複数のブラウザを相手にして環境差を埋めなければならないフロントエンド開発では大事なものです。
+
+### 目的 2: パフォーマンスのため
+
+IE のサポートを落とした場合、最近のブラウザは ES Modules をそのまま扱うことができます。だったらそのまま使えばいいんじゃないか？と思うかもしれませんが、使ってる人は少数です。これは先に述べた互換性の問題とは別に、パフォーマンスの問題があります。
+
+1. スクリプトをダウンロード
+2. スクリプトを評価
+3. `import` 文を発見したら、またダウンロードして評価
+
+これを依存の深さの回数だけ繰り返します。着目すべきは、これをネットワーク越しに行っているということです。ネットワークからスクリプトを取得するまで依存がわからず、そのネットワークは、早くても 20 ミリ秒 場合によっては 1 秒ほど必要です。
+
+TODO: 図
+
+あなたは `localhost` という特別な環境でコードを書いているということも忘れないでください。 localhost においてはネットワーク遅延なし、ファイルの読み込み速度 = ディスクからの読み込み速度ですが、ユーザーに届く環境(たとえば Vercel) にデプロイした環境では、ネットワーク越しにこの挙動を行います。遅延 x 深さで読み込みの遅延が発生します。
+
+webpack を使わない、という選択肢ももちろんあります。その場合、依存の深さが浅くなるように、事前に結合済みのスクリプトを呼ぶことになります。つまり、結局いずれかの時点でビルド処理が必要になる、ということです。
+
+現時点では、ES Modules という仕様は IE という環境の有無に限らず、あまり使われていません。その結果 ESM をエミュレーションする webpack の重要度がさらに増しています。
+
+### 目的 3: node_modules を扱うため
+
+commonjs と ES Modules は影響はありつつも、お互い無関係に策定されました。
+
+ファイルの相対パスや絶対パス以外にライブラリの名前が指定された時、それをどう解決するかは、ES Modules に仕様がありません。(importmaps という仕様が策定中ですが、まだ特殊な環境でしか動きません)
+
+```js
+import React from "react";
+```
+
+これは、 `node_modules/react/package.json` の `main` フィールドが指す `node_modules/react/index.js` という実体として webpack に解釈されます。
+この挙動は node.js の commonjs の名前解決ルールに合わせています。
+
+つまり、これは次のコードと同じです。
+
+```js
+// src/index.js の場合
+import React from "../node_modules/react/index.js";
+```
+
+webpack はこの名前解決を行ってくれます。
+
+webpack の挙動としては、まず package.json は `module` というフィールドがあれば、ES Modules としてそれを読み込み、`main` というフィールドがあれば、commonjs としてそれを読み込みます。
+
+commonjs の際は、 `module.exports` された対象を `export default` として扱います。これはなんらかの仕様がある挙動ではなく、 webpack の独自の挙動です。
+
+typescript でも、この挙動を再現する、 `esMobudelsInterop: true`, `moduleResolution: node` という設定を推奨します。
+
+本ドキュメントとしては、 commonjs に深入りしません。現在のベストプラクティスではないからです。ただし、各種設定ファイルを書くのに頻繁に出現するので、とりあえず、 `export default {...}` が `module.exports = {...}` に相当する概念ということだけ覚えてください。
+
+## 余談: commonjs と ES Modules
+
+ここで、 ES Modules ではなく、 `require(...)` と `module.exports` という文法で書かれています。これは文法ではなく、JS の言語仕様の中で module を実現した commonjs という仕様です。
+
+ES Modules 以前、2008 年から開発が始まった node.js は commonjs というモジュールシステムを採用しました。その後, 2015 年に ES2015 が策定されました。この 2 つは似ているところはありつつも、厳密には、変換規則や評価順に互換性がありません。
+
+node.js における　 ES Modules 対応はまだ過渡期で、 node 14 では、 `.mjs` という拡張子で ESM を扱うことができますが、 まだ制約が多く、使いやすいとは言えません。
+
+このように、 node ツールチェイン では、頻繁に commonjs の仕様で設定を記述することがあります。
+
+## webpack.config.js を書く
+
+ちょっと脱線しましたが、 webpack の解説に戻ります。
+先程は暗黙の既定値を使いましたが、実際には `webpack.config.js` というファイルで webpack の設定を記述していく事が多いです。
+
+```js
+const path = require("path");
+module.exports = {
+  entry: {
+    main: path.join(__dirname, "src/index.js")
+  },
+  output: {
+    path: path.join(__dirname, "dist")
+    filename: "[name].js"
+  }
+};
+```
+
+`__dirname` は commonjs の既定値で、そのファイルが置かれているディレクトリの文字列です。 `path.join` による文字列結合で、 `src/index.js` に `main` という名前を与えます。
+
+`output` の設定では、同じく相対パスの dist に対して、 `[name].js` という名前でファイル名を指定します。これが先の main に当たるので、 `src/index.js` が `dist/main.js` として出力される、という意味になるわけです。
+
+これは、デフォルトと同じ挙動になります。無設定に等しいです。これを元に拡張していきましょう。
+
+## webpack.config.js を拡張する例: ts-loader
+
+```js
+// webpack.config.js
+const path = require("path");
+module.exports = {
+  resolve: {
+    extensions: [".js", ".ts", ".tsx"],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: "ts-loader",
+      },
+    ],
+  },
+};
+```
+
+これで webpack は `/\.tsx?$/` という拡張子(例: `.ts`, `.tsx`) のファイルを ts-loader を通して javascript に変形して読み込むようになります。
+
+次に、 `resolve.extensions` に注目してください。 typescript は基本的に拡張子を省略することを求めます。これは変換後に `.js` として読み込まれることがあることを意図しています。なので、webpack 環境において省略可能な拡張子のリストに、`.ts`, `.tsx` を加えます。
+
+「ts-loader を設定する」「省略可能な拡張子に `.ts(x?)` を追加する」この 2 つの設定は、TypeScript においてほぼ必須です。
+
+このように、「ES Modules の結合時に loader を通して変形する」というのが webpack の主なユースケースです。
+
+Webpack が難しい、ということが言われる際に、 プロジェクトごとにここに特殊な loader が大量に増えていき、またプロジェクトごとに異なる設定を要求されがちで、ベストプラクティスが掴みづらいというのがあると思います。
+
+## webpack.config.js を拡張する例: style-loader
+
+最近では css も npm として配られることが多く、webpack のバンドルの仕組みで、 js と一緒にビルドしてしまうことが多いです。
+
+例えば、よく使われる `normalize.css` を読み込む例です。
+
+```
+npm install style-loader css-loader --save-dev
+npm install normalize.css --save
+```
+
+これを使う設定を書いていきましょう。
+
+```js
+// webpack.config.js
+const path = require("path");
+module.exports = {
+  entry: {
+    main: path.join(__dirname, "src/index.js")
+  },
+  output: {
+    path: path.join(__dirname, "dist")
+    filename: "[name].js"
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      }
+    ]
+  }
+};
+```
+
+`mudule.rules` は、 test の正規表現にマッチしたものを、 指定した loader 順番に使う、という意味です。
+
+- css-loader: CSS を JavaScript に変換して読み込みます。 (例: module.exports = `body {color: red}`)
+- style-loader: css-loader で変換されたオブジェクトを 「HTML の style タグとして head に挿入する」というコードに変換します。
+
+これを使ってみましょう。 src/index.js に次の行を追加します。
+
+```js
+// index.js
+import "normalize.css/normalize.css";
+```
+
+これによって、 「normalize.css を style タグとして `document.head` に挿入する」という挙動が実現されます。
+
+## チャンク分割
+
+これにより、全体共通チャンク、画面ごとのチャンク、画面遷移時のそれを自動で分割してくれています。webpack のビルドチャンクの分割はとても難しく、熟練のフロントエンドエンジニアでも手こずる作業です。
+
+## 筆者の推奨する設定
+
+```js
+// webpack.config.js
+const path = require("path");
+module.exports = {
+  resolve: {
+    extensions: [".js", ".ts", ".tsx"],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: [
+          {
+            loader: "ts-loader",
+            options: {
+              transpileOnly: true,
+            },
+          },
+        ],
+      },
+    ],
+  },
+};
+```
+
+## next.js とは何なのか
+
+ここでなぜ webpack を紹介したか、という解説です。
+
+実は next.js は webpack と密に連携するサーバーです。なのでデフォルトの設定を持ちます。これはこれで必要な設定が入っていて、先の style-loader 相当のものは実は最初から定義されています。
+
+next.js は webpack を内蔵しています。
+
+基本的には拡張する必要はないのですが、もし必要ならば `next.config.js` というファイルで各種 webpack の設定を拡張することができます。
+
+next.js 上で webpack の設定を拡張する場合は、次のようにします。
+
+```js
+// next.config.js
+module.exports = {
+  webpack(config) {
+    config.module.rules.push({
+      // ...
+    });
+    return config;
+  },
+};
+```

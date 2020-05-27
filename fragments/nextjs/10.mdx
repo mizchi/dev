@@ -1,0 +1,47 @@
+# 第 2 部: 実践 next.js
+
+ここまででやってきたことをフル活用して、 next.js をやっていく章です。この章は
+
+1 章で紹介したのは、 next.js の機能の一部だけです。動的・静的なページを
+
+# はじめに
+
+## next.js/examples を眺めてみよう
+
+next.js の良い点の一つに、公式の `examples` ディレクトリの豊富な作例があります。
+
+[next\.js/examples at canary · zeit/next\.js](https://github.com/zeit/next.js/tree/canary/examples)
+
+例えば、 [next\.js/examples/cms\-contentful](https://github.com/zeit/next.js/tree/canary/examples/cms-contentful) は、バックエンドとして Contentful を使った作例です。
+
+# 第一章 Server(less) Mode
+
+```ts
+// pages/api/hello.ts
+
+export default (req, res) => {
+  res.json({ text: "hello" });
+};
+```
+
+`pages/api/*` は next.js によって `/api/hello` のルーティングにマッピングされます。
+
+```ts
+const res = await fetch("/api/hello");
+const data = await res.json();
+console.log(data); // => {text: "hello"}
+```
+
+# 第二章 SSG モード
+
+この機能は、Contentful や Notion のような Headless と組み合わせて使うことを想定しています。
+
+[next\.js/examples/cms\-contentful at canary · zeit/next\.js](https://github.com/zeit/next.js/tree/canary/examples/cms-contentful)
+
+TBD
+
+# 第三章 AMP
+
+[next\.js/examples/amp\-first at canary · zeit/next\.js](https://github.com/zeit/next.js/tree/canary/examples/amp-first)
+
+## ブログを作る

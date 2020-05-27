@@ -1,0 +1,331 @@
+# 第 4 章: React
+
+1 章で 「ただのテンプレート記法だと思ってください」といった React ですが、これは実はいろんな応用があります。
+
+## React とはなにか
+
+React はただの HTML のテンプレート記法ではありません。React が本領を発揮するのは、サーバーサイドではなくクライアントサイドで、動的なページを作る際です。
+
+Slack や Gmail などを想像してください。最近の Web アプリケーションは、画面遷移なしでもその構成要素が激しく切り替わります。
+
+本来、 HTML とは木構造で表される文書データです。HTML は文字列で、それを JavaScript 上で操作する API を DOM (Document Object Model) というのですが、React はこの HTML という木のオブジェクトを、先のテンプレート構文から自動で再計算するライブラリです。
+
+これだけだと何のことかわからないと思いますが、次の例で解説します。
+
+状態 1
+
+```html
+<div>
+  <h1>X</h1>
+  <p>hello</p>
+</div>
+```
+
+状態 2
+
+```html
+<div>
+  <h1>Y</h1>
+  <p class="hidden">hello</p>
+</div>
+```
+
+この 2 つの状態をあるとします。
+
+- h1 の中身が `X` から `Y` に
+- p タグの `class` に hidden を追加
+
+これを、 DOM API を使って手動で書き換えることもできますが、 React はもっと賢い手段を提供してくれます。
+
+React では、これらの状態 1 と 状態 2 を都度から全くのゼロ組み立てます。これによって、前の状態を知る必要がありません。
+
+- 仮想的な状態 1 と 仮想的な状態 2 を構築して、比較
+- その差分から、本物の DOM にその操作を差分適用する処理を実行
+
+状態 1 から 状態 2 へどのように書き換えるかは、 React が自動で計算してくれます。このとき、JSX という記法は本物の DOM を生成しているわけではなく、「仮想的な状態 1」と「仮想的な状態 2」 を組み立てていて、React は常に最新の状態を受け取り、差分を計算して画面を書き換えている、というわけですね。
+
+色々言いましたが、React を使うと状態遷移のための差分を自分で記述する必要ない、というのがミソで、常に「今の画面はこうあるのが正しい」のを、記述するのが、ユーザーの責務となります。
+
+## React の環境を作る
+
+```bash
+mkdir hello-react
+cd hello-react
+code .
+npm install --save react react-dom
+npm install --save-dev typescript webpack webpack-cli ts-loader html-webpack-plugin webpack-dev-server @types/react @types/react-dom
+```
+
+devDependencies がややこしくなってきましたね! 初出なのは html-webpack-plugin と webpack-dev-server ですが、解説は後回しにして、先にビルドしたい React のコードを書きましょう。
+
+```tsx
+// src/index.tsx
+import React from "react";
+import ReactDOM from "react-dom";
+
+// マウント用のElementを生成
+const el = document.createElement("div");
+document.body.appendChild(el);
+ReactDOM.render(<div>Hello</div>, el);
+```
+
+で、このコードを動かす `webpack.config.js` を書いていきます。3 章で使った webpack の設定 + `html-webpack-plugin` というものを使います。
+
+```js
+// webpack.config.js
+const HTMLPlugin = require("html-webpack-plugin");
+module.exports = {
+  resolve: {
+    extensions: [".js", ".ts", ".tsx"],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: "ts-loader",
+      },
+    ],
+  },
+  plugins: [new HTMLPlugin()],
+};
+```
+
+この `html-webpack-plugin` が何かというと、webpack でのビルド時に 「ビルドされた js を script として持つ index.html」を output で指定されたディレクトリに挿入します。
+
+なので、`webpack` での出力は、次のようになります。
+
+```
+dist/
+  index.html # <script src="/main.js"></script>
+  main.js
+```
+
+で、 これと組み合わせる `webpack-dev-server` を今回は使います。 webpack によるビルド対象が更新されると自動で再ビルドしつつ、output するディレクトリをルートとする静的アセットのサーバーです。
+
+実行します。
+
+```
+npx webpack-dev-server
+```
+
+先の dist をルートとして、 `http://localhost:8080` にサーバーが立ち上がりました。多くのサーバーと同じく、 `/` は `index.html` が返却されるため、これで `src/index.tsx` が自動でビルドされて更新される環境が実現できました。
+
+試しに、`<div>Hello</div>` を `<div>Hoge</div>` などに書き換えて保存してみてください。画面に反映されるはずです。
+
+この html-webpack-plugin + webpack-dev-server の組み合わせは、React に限らずフロントエンドのライブラリや新しい機能を実験をする際にとても有利です。是非覚えておきましょう。
+
+## Counter の例
+
+ボタンを押すと、値が 1 増えるという、よくあるカウンタ実装の例を示します
+
+```tsx
+// src/index.tsx
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
+
+function Counter() {
+  const [counter, setCounter] = useState(0);
+  return (
+    <div>
+      <div>Counter: {counter}</div>
+      <button
+        onClick={() => {
+          setCounter((n) => n + 1);
+        }}
+      >
+        +1
+      </button>
+    </div>
+  );
+}
+
+// マウント用のElementを生成
+const el = document.createElement("div");
+document.body.appendChild(el);
+ReactDOM.render(<Counter />, el);
+```
+
+これは Function Component という機能で、`<Counter />` はその関数の実行結果で展開されます。他に Class Copmonent があるのですが、現在の主流は Function Component なので、今回は解説しません。
+
+React で状態を扱うには、 hooks という API を使います。 `useState()` は引数として初期値を受け取り、 `[現在の値, 値を更新する関数]` という配列を返します。これを分割代入という記法で、それぞれ受け取っています。
+
+`onClick={() => {...}}` という構文で、click イベントリスナーに onClick の際に実行される関数を渡しています。つまり、 ボタンをクリックするたびに `setCounter((n) => n + 1)` を実行します。setCounter の引数は 2 種類あって、「次の値」、もしくは「前の値を引数として、次の値を返す関数」です。
+
+`setCounter` が実行されると、この Counter の関数コンポーネントが、関数として再度実行されます。この時、 `const [counter, setCounter] = useState(0);` の `counter` は 1 を返します。
+
+この結果、
+
+```tsx
+<div>
+  <div>Counter: 1</div>
+  <button
+    onClick={() => {
+      setCounter((n) => n + 1);
+    }}
+  >
+    +1
+  </button>
+</div>
+```
+
+という仮想 DOM が生成されます。React の差分適用アルゴリズムにより、目に見える部分としては、 `Counter: 1` の部分が更新されます。目には見えませんが、 button のイベントハンドラの関数も更新されます。
+
+このように、都度差分オブジェクトをまるごと生成し、React の差分検知で必要な部分だけ書き換えが走る、というのが基本的なライフサイクルとなります。
+
+## Component と props と TypeScript
+
+```tsx
+// src/index.tsx
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
+
+function Counter(props: { text: string; initialValue: number }) {
+  const [counter, setCounter] = useState(0);
+  return (
+    <div>
+      <div>
+        {props.text}: {props.counter}
+      </div>
+      <button
+        onClick={() => {
+          setCounter((n) => n + 1);
+        }}
+      >
+        +1
+      </button>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <>
+      <Counter text="A" initialValue={0} />
+      <Counter text="B" initialValue={5} />
+    </>
+  );
+}
+
+const el = document.createElement("div");
+document.body.appendChild(el);
+ReactDOM.render(<App />, el);
+```
+
+まず `<>...</>` は `Fragment` という仮想のノードで、DOM としての実体をもちません。Component として、複数の要素を返す時に便利な機能です。
+
+この Fragment の中で、 2 つの Counter を返しています。 ここでコンポーネントへの引数として、 `text` と `initialValue` という値を渡しています。`text="A"` は文字列として渡すときに使える構文で、 `{0}` は 数値型に限らず、JavaScript のオブジェクトを渡す時に使える構文です。なので、 `{"A"}` でも良いです。
+
+次に、 Counter の関数コンポーネントの引数を見ていきましょう。ここまで tsx を使いつつ TypeScript の機能を使っていませんでしたが、ここでやっと TypeScript の型の出番です。
+
+`function Counter(props: { text: string, initialValue: number }) {...}`
+
+は、第一引数の `props` として `{ text: string, initialValue: number }` のオブジェクトを受け取る、という意味になります。慣習的に、この値は `props` と名付けることになっています。
+
+このとき、 A と B の２つの `Counter` は独自の初期値と、独自のライフサイクルを持ちます。試しに、２つのカウンターをクリックしてみてください。再描画、再更新の単位は、それぞれ独自となっているはずです。このように、 Component は展開するビューを宣言する関数であるだけでなく、ライフサイクルの単位でもあります。
+
+## Context
+
+props は必ず親から渡す必要があります。親子間で自明ですが、これとは別に、「特定の親に依存した値」という値を参照するために、 context という機能があります。
+
+```tsx
+// src/index.tsx
+import React, { useState, useContext } from "react";
+import ReactDOM from "react-dom";
+
+const ThemeContext = React.createContext<{ color: string }>({
+  color: "transparent", // 初期値。今回は使わない
+});
+
+function View() {
+  const theme = useContext(ThemeContext);
+  return <div style={{ color: theme.color }}>Text with color</div>;
+}
+
+function App() {
+  return (
+    <>
+      <ThemeContext.Provider value={{ color: "wheat" }}>
+        <View />
+      </ThemeContext.Provider>
+      <ThemeContext.Provider value={{ color: "red" }}>
+        <View />
+      </ThemeContext.Provider>
+    </>
+  );
+}
+
+const el = document.createElement("div");
+document.body.appendChild(el);
+ReactDOM.render(<App />, el);
+```
+
+`React.createContext` で生成された、 `ThemeContext.Provider` という要素の下では、 `useContext` すると、`<Provider value={...}>` の value が取れるようになります。
+
+## 簡易 Flux
+
+```tsx
+// src/index.tsx
+import React, { useState, useContext, SetStateAction, Dispatch } from "react";
+import ReactDOM from "react-dom";
+
+type State = {
+  value: number;
+};
+
+const AppStateContext = React.createContext<State>({
+  value: 0,
+});
+
+const SetAppStateContext = React.createContext<Dispatch<SetStateAction<State>>>(
+  () => {}
+);
+
+function View() {
+  const appState = useContext(AppStateContext);
+  const setAppState = useContext(SetAppStateContext);
+
+  return (
+    <div>
+      <span>{appState.value}</span>
+      <button
+        onClick={() => {
+          setAppState({ value: appState.value + 1 });
+        }}
+      ></button>
+    </div>
+  );
+}
+
+function App() {
+  const [state, setState] = useState<State>({ value: 0 });
+  return (
+    <>
+      <AppStateContext.Provider value={state}>
+        <SetAppStateContext.Provider value={setState}>
+          <View />
+        </SetAppStateContext.Provider>
+      </AppStateContext.Provider>
+    </>
+  );
+}
+
+const el = document.createElement("div");
+document.body.appendChild(el);
+ReactDOM.render(<App />, el);
+```
+
+これは、 View が一つしか無いので必要性がわかりづらいのですが、 大仰な Counter です。
+
+## おわり
+
+React の機能を全部紹介すると大変な分量になるので、ここでは状態管理のためのイディオムの紹介に留めました。
+
+## Next.js においての react
+
+React は効率的な DOM 管理のために生まれました。しかし、その発展の過程で、一つのテンプレートとしても受容されてきたという歴史があります。JSX 記法は React だけの記法ではなく、 vue.js や preact といったフレームワークでも使用することができます。
+
+next.js ではテンプレートとして React を使いつつ、クライアントサイドでの React の力を 100% 使うことができます。初期状態を初期状態の HTML として返却しつつ、その初期 HTML を引き継いで、シームレスにクライアントで動かすことができます。これは、他の Web Application Framework にない唯一無二の機能です。
+
+しかし、クライアント・サーバーの状態引き継ぎは実はとても難しいテクニックを必要とします。具体的には Server Side Rendering と、 Client での Hydration という２つを組み合わせます。
+
+次の章では、 Server Side Node.js として、クライアントで動くようにするためのテクニックを紹介します。
