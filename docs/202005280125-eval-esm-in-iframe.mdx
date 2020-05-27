@@ -1,0 +1,69 @@
+---
+title: iframe の中で ES Modules のコードを評価する
+created: 1590596703469
+tags: []
+---
+
+rollup のような ESM を吐くツールのプレビューツールを作っていると、文字列として組み立てたコードを安全に評価したいことがあります。
+
+## 方法
+
+- iframe を createObjectURL
+- dynamic import で data uri として文字列を評価
+- 得られた関数を実行
+
+## コード
+
+```ts
+// これを評価したい
+const code = `export default () => { console.log("xxx") }`;
+
+const encoded = btoa(code);
+const blob = new Blob(
+  [
+    `<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+  <script type=module>
+    import("data:text/javascript;base64,${encoded}").then(mod => mod.default());
+  </script>
+  </body>
+</html>`,
+  ],
+  { type: "text/html" }
+);
+
+// const iframe = document.querySelector("iframe");
+iframe.src = URL.createObjectURL(blob);
+```
+
+## 解説: data uri の import
+
+ESM のコードを script タグの中で評価しても、実行はできても export されたオブジェクトの参照を手に入れることができません。
+
+なので、 data uri 化されたコードを `import(...)` を経由することで、export オブジェクトを手に入れています。
+
+```ts
+import("data:text/javascript;base64,${encoded}").then((mod) => mod.default());
+```
+
+これでモジュールが手に入るので、関数として実行しています。
+
+## 解説: iframe
+
+UI スレッドで何度もコードを実行すると、window に起きる副作用の影響を受けてしまうので、実行コンテキストを隔離する目的で iframe を使います。
+
+HTML を blob 化して `URL.createObjectURL(blob)` で, 何にも紐付かない iframe を作ります。
+
+```ts
+const blob = new Blob([`<!DOCTYPE html><html><body></body></html>`], {
+  type: "text/html",
+});
+iframe.src = URL.createObjectURL(blob);
+```
+
+本当にセキュアにやるなら realm などを使ったほうがいいです。
+
+[tc39/proposal\-realms: ECMAScript Proposal, specs, and reference implementation for Realms](https://github.com/tc39/proposal-realms)
