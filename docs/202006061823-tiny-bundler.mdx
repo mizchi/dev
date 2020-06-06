@@ -1,0 +1,494 @@
+---
+title: module bundler を作った
+created: 1591435424224
+tags: []
+---
+
+このフロントエンドの魔境に生まれたからには一度は俺が考えた最強の module bundler を作りたい。みんなそう思ってると思う。作った。
+
+[mizchi/bundler: hobby bundler](https://github.com/mizchi/bundler)
+
+## tldr
+
+このコードが
+
+```ts
+// foo.js
+export default 1;
+
+// index.js
+import foo from "./foo.js";
+console.log(foo);
+export const index = 1;
+```
+
+こうなる
+
+```ts
+// @mizchi/bundler generate
+const _$_exported = {};
+const _$_import = (id) =>
+  _$_exported[id] || _$_modules[id]((_$_exported[id] = {}));
+const _$_modules = {
+  "/foo.js": (_$_exports) => {
+    _$_exports.default = 1;
+    return _$_exports;
+  },
+};
+// -- entry --
+
+const { default: foo } = _$_import("/foo.js");
+
+console.log(foo);
+export const index = 1;
+```
+
+## もうちょっと複雑な例: snowpack
+
+importmap をサポートしているので、このコードが動く。
+
+```ts
+import { h } from "preact";
+import render from "preact-render-to-string";
+console.log(render(h("div", {}, "hello")));
+```
+
+(実際は色々下準備が必要。あとで作る、かも)
+
+[bundler/examples/with\-snowpack at master · mizchi/bundler](https://github.com/mizchi/bundler/tree/master/examples/with-snowpack)
+
+## もうちょっと複雑な例: dynamic import chunk / worker chunk / publicPath
+
+### dynamic import
+
+```ts
+import { Bundler } from "@mizchi/bundler";
+import { format } from "prettier"; // install yourself
+const fileMap = {
+  "/worker.js": "self.onmessage = (ev) => console.log(ev);",
+  "/foo.js": "export default 1;",
+  "/index.js": `
+const p = import("./foo.js");
+const worker = new Worker("./worker.js");
+worker.postMessage({hello: "world"})
+`,
+};
+const bundler = new Bundler(fileMap);
+(async () => {
+  const chunks = await bundler.bundleChunks("/index.js", {
+    publicPath: "/dist/",
+  });
+  // console.log(format(code, { parser: "babel" }));
+  console.log(chunks);
+})();
+```
+
+この出力はこうなる。
+
+```json
+[
+  {
+    "type": "entry",
+    "entry": "/index.js",
+    "builtCode": "// @mizchi/bundler generate\nconst _$_exported = {};\nconst _$_import = (id) => _$_exported[id] || _$_modules[id](_$_exported[id] = {});\nconst _$_modules = {};\n\n;\n\n// -- entry --\n\nconst p = import(\"/dist/_$_foo.js\");\nconst worker = new Worker(\"/dist/_$_worker.js\");\nworker.postMessage({\n  hello: \"world\"\n});;\n\n"
+  },
+  {
+    "type": "chunk",
+    "entry": "/foo.js",
+    "chunkName": "/dist/_$_foo.js",
+    "builtCode": "// @mizchi/bundler generate\nconst _$_exported = {};\nconst _$_import = (id) => _$_exported[id] || _$_modules[id](_$_exported[id] = {});\nconst _$_modules = {};\n\n;\n\n// -- entry --\n\nexport default 1;;\n\n"
+  },
+  {
+    "type": "chunk",
+    "entry": "/worker.js",
+    "chunkName": "/dist/_$_worker.js",
+    "builtCode": "// @mizchi/bundler generate\nconst _$_exported = {};\nconst _$_import = (id) => _$_exported[id] || _$_modules[id](_$_exported[id] = {});\nconst _$_modules = {};\n\n;\n\n// -- entry --\n\nself.onmessage = ev => console.log(ev);;\n\n"
+  }
+]
+```
+
+これを `dist/*` に配置して、`index.html` から呼べば実行できる。そのための `publicPath`
+
+## 実装した機能
+
+- treeshake による未使用コード削除
+- dynamic import 向けの chunk splitting
+- webworker 用 chunk splitting (webpack の worker-plugin 相当)
+- importmap による書き換え
+
+## 何故作ったか
+
+### 勉強のため
+
+hiroppy が書いたやつをふんわり読んで、これなら作れそう、と思って作った。
+
+[module bundler の作り方\(ECMAScript Modules 編\) \- 技術探し](https://blog.hiroppy.me/entry/create-module-bundler-esm)
+
+実際はあんまりちゃんと読んでないけど、babel の parser / generator / traverse を使う、 モジュール用テンプレート、実行用テンプレートという発想だけ持ち帰った感はある。
+
+ビルド用に id 降ったほうがよい、というのだけ無視していて、仮想 FS 内の絶対パスをそのまま使っている。仮想の FS のルートなら環境依存は無いので。
+
+### ESM to Bundled ESM
+
+複数の ESM を ESM にバンドルするだけの簡易なコンパイラが欲しかった。webpack も rollup も ESM を入力にできるし、 IE が死のうとしている今、現代のブラウザは ESM は当然のように備えているので、バンドル処理はネットワークをまたがずに RTT を減らすためだけのものでしかない。要は、エントリポイントの ESM はそのまま残して、内部の import export だけ書き換えればよい。
+
+deno を試した感じ、 importmap がありさえすれば `node_modulse` の名前解決はそこまで困らない印象だったので、import-map をサポートして、 node_modules への名前解決を実装するのをやめた。
+
+## ブラウザフレンドリー
+
+node_modules のサポートをやめた理由でもあるんだけど、主にブラウザをターゲットに動くものなので、ブラウザ内で実行しながらプレビューしたい。
+
+また、ブラウザ内でバンドラを実行するのは、おそらくそこにエディタがあって高頻度にビルドされることが想定されるので、 AST に変換した中間状態を全部保存して、ビルド処理はグラフをなめるだけで終わるようにした。これでプレビューは速度が高速になった。
+
+WebWorker のスレッドで実行されることを想定している。worker で並列処理をすることも考えたが、後回し。これ使いたい。[developit/web\-worker: Consistent Web Workers in browser and Node\.](https://github.com/developit/web-worker)
+
+## Babel(+ typescript-preset) First
+
+webpack / rollup は内部で acorn を使ってて、これは 90k と軽量で便利ではあるんだけど、最終的にコードの変形では babel や babel のプラグインを使っている事が多い。 複数の AST 定義を跨ぐのが面倒なので、最初から全部 babel とした。
+
+このコンパイラを webpack でバンドルしたところ、約 840kb。開発者用ツールなら十分なサイズだと思う。(あとで rollup の es 出力にする)
+
+### 可読性のある出力
+
+sourcemap 対応をしない代わりに、比較的可読性がある出力を目指した。sourcemap を使っていても、結局 debugger などで止めた際に変数が書き換えられていると、 見えてるシンボルと実際のものが別物で、あんまり使い物にならない。async をサポートした ES2017 以上のターゲットなら、そもそもほとんどのコードが変換されないので、生で読んだほうが早い。
+
+## 完走した感想
+
+treeshake は簡易なものを実装してみたが正直しんどい。何を持って副作用があるとするかを、とりあえず whiltelist な AST Node のパターンを作って、それを違反しない限りは副作用がないとしているが、真面目にやるとエッジケースが無限にありそう。
+
+ブラウザ内で動いてビルドの速さを売りにしたい場合、
+
+snowpack や rome と思想が競合してる気がする。
+
+完走してない。
+
+## 今後
+
+- rollup で esm バンドルする
+- typescript support:
+  - babel/parser のオプションを有効にしているので、parse はできてる気がするが、たぶん出力にも残ってしまっている
+  - tsx もサポートする
+- エディタ
+
+## おまけ: Treeshake 無し版のコード
+
+treeshake や各種の最適化のためにコードが膨れたので、treeshake 実行前のコードをここに貼る。250 行ほど。
+
+[bundler](https://gist.github.com/mizchi/368c75fc1088dabfda7dfed726ef9f85)
+
+```tsx
+// yarn add @babel/parser @babel/traverse @babel/generator @babel/types memfs
+// yarn add @types/babel__core @types/node -D
+import path from "path";
+
+import { parse } from "@babel/parser";
+import traverse from "@babel/traverse";
+import generate from "@babel/generator";
+import * as t from "@babel/types";
+
+import type { IPromisesAPI } from "memfs/lib/promises";
+import createFs from "memfs/lib/promises";
+import { vol } from "memfs";
+
+// helper
+function createMemoryFs(files: { [k: string]: string }): IPromisesAPI {
+  vol.fromJSON(files, "/");
+  return createFs(vol) as IPromisesAPI;
+}
+
+type Module = {
+  ast: t.File;
+  filepath: string;
+  imports: Import[];
+};
+
+type Import = {
+  filepath: string;
+};
+
+type Output = {
+  filepath: string;
+  code: string;
+  imports: Import[];
+};
+
+class Bundler {
+  public modulesMap = new Map<string, Module>();
+  public outModules: Array<Output> = [];
+  fs: IPromisesAPI;
+  constructor(public files: { [k: string]: string }) {
+    this.fs = createMemoryFs(files);
+  }
+  public async bundle(entry: string) {
+    await this.addModule(entry);
+    await this.transform(entry);
+    return await this.emit("/index.js");
+  }
+
+  async addModule(filepath: string) {
+    if (this.modulesMap.has(filepath)) {
+      return;
+    }
+    const basepath = path.dirname(filepath);
+
+    const code = (await this.fs.readFile(filepath, {
+      encoding: "utf-8",
+    })) as string;
+
+    const ast = parse(code, {
+      sourceFilename: filepath,
+      sourceType: "module",
+    });
+
+    let imports: Import[] = [];
+    traverse(ast, {
+      ImportDeclaration(nodePath) {
+        const target = nodePath.node.source.value;
+        const absPath = path.join(basepath, target);
+        imports.push({
+          filepath: absPath,
+        });
+      },
+    });
+    await Promise.all(
+      imports.map((imp) => {
+        return this.addModule(imp.filepath);
+      })
+    );
+    this.modulesMap.set(filepath, {
+      filepath,
+      ast,
+      imports,
+    });
+  }
+
+  async transform(filepath: string) {
+    const mod = this.modulesMap.get(filepath)!;
+    const alreadyIncluded = this.outModules.find(
+      (m) => m.filepath === filepath
+    );
+    if (alreadyIncluded) {
+      return;
+    }
+
+    const basepath = path.dirname(filepath);
+
+    const newImportStmts: t.Statement[] = [];
+
+    traverse(mod.ast, {
+      ImportDeclaration(nodePath) {
+        const target = nodePath.node.source.value;
+        const absPath = path.join(basepath, target);
+        const names: [string, string][] = [];
+        nodePath.node.specifiers.forEach((n) => {
+          if (n.type === "ImportDefaultSpecifier") {
+            names.push(["default", n.local.name]);
+          }
+          if (n.type === "ImportSpecifier") {
+            names.push([n.imported.name, n.local.name]);
+          }
+          if (n.type === "ImportNamespaceSpecifier") {
+            newImportStmts.push(
+              t.variableDeclaration("const", [
+                t.variableDeclarator(
+                  t.identifier(n.local.name),
+                  t.callExpression(t.identifier("$$import"), [
+                    t.stringLiteral(absPath),
+                  ])
+                ),
+              ])
+            );
+          }
+        });
+
+        const newNode = t.variableDeclaration("const", [
+          t.variableDeclarator(
+            t.objectPattern(
+              names.map(([imported, local]) => {
+                return t.objectProperty(
+                  t.identifier(imported),
+                  t.identifier(local)
+                );
+              })
+            ),
+            t.callExpression(t.identifier("$$import"), [
+              t.stringLiteral(absPath),
+            ])
+          ),
+        ]);
+        newImportStmts.push(newNode);
+        nodePath.replaceWith(t.emptyStatement());
+      },
+      ExportDefaultDeclaration(nodePath) {
+        const name = "default";
+        const right = nodePath.node.declaration as any;
+        const newNode = t.expressionStatement(
+          t.assignmentExpression(
+            "=",
+            t.memberExpression(
+              t.identifier("$$exports"),
+              t.stringLiteral(name),
+              true
+            ),
+            right
+          )
+        );
+        nodePath.replaceWith(newNode);
+      },
+      ExportNamedDeclaration(nodePath) {
+        // TODO: name mapping
+        // TODO: Export multiple name
+        if (nodePath.node.declaration) {
+          const decl = nodePath.node.declaration.declarations[0];
+          const name = decl.id.name;
+          const right = decl.init;
+          const newNode = t.expressionStatement(
+            t.assignmentExpression(
+              "=",
+              t.memberExpression(
+                t.identifier("$$exports"),
+                t.identifier(name)
+                // true
+              ),
+              right
+            )
+          );
+          nodePath.replaceWith(newNode);
+        } else {
+          // export { a as b }
+          const exportNames: Array<{ exported: string; imported: string }> = [];
+          for (const specifier of nodePath.node.specifiers) {
+            if (specifier.type == "ExportSpecifier") {
+              exportNames.push({
+                exported: specifier.exported.name,
+                imported: specifier.local.name,
+              });
+            }
+          }
+          nodePath.replaceWith(
+            t.blockStatement(
+              exportNames.map((exp) => {
+                return t.expressionStatement(
+                  t.assignmentExpression(
+                    "=",
+                    t.memberExpression(
+                      t.identifier("$$exports"),
+                      t.identifier(exp.exported)
+                      // true
+                    ),
+                    nodePath.node.source
+                      ? t.memberExpression(
+                          t.callExpression(t.identifier("$$import"), [
+                            t.stringLiteral(
+                              path.join(basepath, nodePath.node.source.value)
+                            ),
+                          ]),
+                          t.identifier(exp.imported)
+                        )
+                      : t.identifier(exp.imported)
+                  )
+                );
+              })
+            )
+          );
+        }
+      },
+    });
+
+    const out = {
+      ...mod.ast,
+      program: {
+        ...mod.ast.program,
+        body: [...newImportStmts, ...mod.ast.program.body],
+      },
+    };
+    const gen = generate(out);
+    this.outModules.push({
+      imports: mod.imports,
+      filepath: mod.filepath,
+      code: gen.code,
+    });
+
+    await Promise.all(
+      mod.imports.map((imp) => {
+        return this.transform(imp.filepath);
+      })
+    );
+  }
+
+  async emit(entry: string) {
+    const entryMod = this.outModules.find((m) => m.filepath === entry);
+
+    const importCodes = this.outModules
+      .filter((m) => m.filepath !== entry)
+      .map((m) => {
+        return `$$import("${m.filepath}");`;
+      })
+      .join("\n");
+
+    const mods = this.outModules
+      .filter((m) => m.filepath !== entry)
+      .map((m) => {
+        return `"${m.filepath}": ($$exports) => {
+    ${m.code}
+    return $$exports;
+  }
+  `;
+      })
+      .join(",");
+
+    return `// minibundle generate
+  const $$exported = {};
+  const $$modules = { ${mods} };
+  function $$import(id){
+    if ($$exported[id]) {
+      return $$exported[id];
+    }
+    $$exported[id] = {};
+    $$modules[id]($$exported[id]);
+    return $$exported[id];
+  }
+  // evaluate as static module
+  ${importCodes};
+  
+  // -- runner --
+  const $$exports = {}; // dummy
+  ${entryMod?.code};
+  `;
+  }
+}
+
+// runtime
+const files = {
+  "/bar.js": `
+import foo from "./foo.js";
+console.log("eval bar once")
+export default "bar$" + foo
+`,
+  "/foo.js": `
+console.log("eval foo once")
+export default "foo$default";
+export const b = "b";
+export const a = "a";
+`,
+  "/index.js": `
+import * as t from "./foo.js";
+import foo, {a, b as c} from "./foo.js";
+import bar from "./bar.js";
+export const x = c;
+export default 1;
+console.log(foo, bar);
+`,
+};
+
+// @ts-ignore
+import prettier from "prettier";
+async function main() {
+  const bundler = new Bundler(files);
+  const built = await bundler.bundle("/index.js");
+  console.log(prettier.format(built));
+  console.log("--- eval ----");
+  eval(built);
+}
+main();
+```

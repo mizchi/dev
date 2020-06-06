@@ -1,7 +1,7 @@
 ---
-title: React Context を用いた簡易 Flux
+title: React Context を用いた簡易 Store
 created: 1590563363484
-tags: []
+tags: [react, flux]
 ---
 
 ## 課題
@@ -9,9 +9,9 @@ tags: []
 - redux を引っ張り出すと大仰になる。Context 下に共有ステートを持ってそこに setState できるだけでよい。
 - なので、次の 2 つを用意する
   - 現在の state を参照する `const appState = useAppState()`
-  - 現在の state を更新する `const setAppState = useSetAppState()`
+  - 現在の state を更新する関数を返す `const setAppState = useSetAppState()`
 - `React.useState()` と違って分割している理由は、主にパフォーマンス上の理由
-  - 大域な参照なので、可能な限り参照したくない
+  - 大域な参照なので、可能な限りステートを参照したくない
   - `setState()` の API は `(prevState: State) => State` も取れるので、状態更新用途に限ってはそもそも `useAppState()` せずに済むことが多い
 - でも毎回書いてるけどボイラープレート感強い上に忘れるのでここにメモする
 
@@ -25,7 +25,7 @@ export type AppState = {
   value: number;
 };
 
-const initialState = {
+const initialState: AppState = {
   value: 0,
 };
 
