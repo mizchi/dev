@@ -1,0 +1,64 @@
+---
+title: react-jsonschema-form(@rjsf/core) を使う場合は material-ui を使うしかない
+created: 1591683426369
+tags: []
+---
+
+jsonschema から form を生成してくれる react-jsonschema-form というライブラリがある。デモページをみたところ、かなり良く出来てるように感じたので、使ってみた。
+
+[react\-jsonschema\-form playground](https://rjsf-team.github.io/react-jsonschema-form/)
+
+だが、いざ使ってみるとかなり混沌とした状況だった。
+
+## tldr
+
+- `@rjsf/core` の出力は bootstrap@4 で壊れている
+- bootstrap@3 を避ける場合 `@rjsf/material-ui` を使うしかない
+
+## 経緯
+
+- まず、多くの紹介記事は古く、`react-jsonschema-form` は `@rjsf/core` に名前が変わっている
+- bootstrap@3 は jquery 依存が残っているなど、レガシーな設計なので、可能な限り避けたい
+- `@rjsf/core` は bootstrap@3 の CSS を前提にした出力をする
+- bootstrap@4 では、アイコンで使われた gryphicon が有料化したためドロップされていおり、これを使った `@rjsf/core` の出力が壊れる(ボタンほぼ全部)
+- 公式には font-awesome などを使うように推奨されているが、`@rjsf/core` ではライブラリの出力に組み込まれているので、治すのが難しい
+- じゃあ `@rjsf/core` が bootstrap4 対応をしているかと言うと、している気配がない
+- その代わりに `@rjsf/material-ui` の開発をしている
+
+## `@rjsf/material-ui` を使ったコード
+
+```tsx
+import { IChangeEvent, UiSchema } from "@rjsf/core";
+import JSONSchemaForm from "@rjsf/material-ui";
+import { JSONSchema7 } from "json-schema";
+import React, { useState } from "react";
+import { utils } from "@rjsf/core";
+
+const schema = {
+  type: "object",
+  properties: {
+    message: {
+      type: "string",
+      default: "hello",
+    },
+  },
+};
+
+const defaultState = utils.getDefaultFormState(schema, {});
+
+export function Form() {
+  return (
+    <JSONSchemaForm
+      schema={schema}
+      formData={defaultState}
+      onChange={(data: IChangeEvent<any>) => {
+        console.log(data.formData);
+      }}
+    />
+  );
+}
+```
+
+## お気持ち
+
+デザインフレームワークを指定するタイプのライブラリは、はっきりいって辛い。

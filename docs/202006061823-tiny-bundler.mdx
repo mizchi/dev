@@ -53,13 +53,11 @@ import render from "preact-render-to-string";
 console.log(render(h("div", {}, "hello")));
 ```
 
-(実際は色々下準備が必要。あとで作る、かも)
+(実際は importmap を自分で組み立てたりと色々下準備が必要)
 
 [bundler/examples/with\-snowpack at master · mizchi/bundler](https://github.com/mizchi/bundler/tree/master/examples/with-snowpack)
 
 ## もうちょっと複雑な例: dynamic import chunk / worker chunk / publicPath
-
-### dynamic import
 
 ```ts
 import { Bundler } from "@mizchi/bundler";
@@ -138,7 +136,7 @@ deno を試した感じ、 importmap がありさえすれば `node_modulse` の
 
 node_modules のサポートをやめた理由でもあるんだけど、主にブラウザをターゲットに動くものなので、ブラウザ内で実行しながらプレビューしたい。
 
-また、ブラウザ内でバンドラを実行するのは、おそらくそこにエディタがあって高頻度にビルドされることが想定されるので、 AST に変換した中間状態を全部保存して、ビルド処理はグラフをなめるだけで終わるようにした。これでプレビューは速度が高速になった。
+また、ブラウザ内でバンドラを実行するのは、おそらくそこにエディタがあって高頻度にビルドされることが想定されるので、 AST に変換した中間状態を全部保存して、ビルド処理はグラフをなめるだけで終わるようにした。これでプレビュー速度が高速になった。
 
 WebWorker のスレッドで実行されることを想定している。worker で並列処理をすることも考えたが、後回し。これ使いたい。[developit/web\-worker: Consistent Web Workers in browser and Node\.](https://github.com/developit/web-worker)
 
@@ -156,8 +154,6 @@ sourcemap 対応をしない代わりに、比較的可読性がある出力を�
 
 treeshake は簡易なものを実装してみたが正直しんどい。何を持って副作用があるとするかを、とりあえず whiltelist な AST Node のパターンを作って、それを違反しない限りは副作用がないとしているが、真面目にやるとエッジケースが無限にありそう。
 
-ブラウザ内で動いてビルドの速さを売りにしたい場合、
-
 snowpack や rome と思想が競合してる気がする。
 
 完走してない。
@@ -172,7 +168,9 @@ snowpack や rome と思想が競合してる気がする。
 
 ## おまけ: Treeshake 無し版のコード
 
-treeshake や各種の最適化のためにコードが膨れたので、treeshake 実行前のコードをここに貼る。250 行ほど。
+treeshake や各種の最適化のためにコードが膨れたので、treeshake 実装前の単純だった時のコードをここに貼る。250 行ほど。
+
+皆も作ってみよう！
 
 [bundler](https://gist.github.com/mizchi/368c75fc1088dabfda7dfed726ef9f85)
 
