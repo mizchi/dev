@@ -1,0 +1,135 @@
+---
+title: webpack + ts-loader で使う tsconfig.json を動的に切り替える
+created: 1591762452334
+tags: [webpack]
+---
+
+webpack を使っていると typescript の module 指定は、ESM を treeshake するために `"module": "esnext"` としたい。
+
+しかし、`ts-node` を前提としたユーティリティスクリプトを作っていると、`"module": "commonjs"` としないと実行に失敗するようになってしまう。`ts-jest` も同様。
+
+ts-node に関しては、引数で compilerOptions を書き換える方法があり、次のようになる。
+
+```bash
+yarn ts-node -O '{"module":"commonjs"}' script/x.ts
+```
+
+これだと常にこの引数を付けて実行する必要があり、不便。
+
+## ts-loader の configFile
+
+[TypeStrong/ts\-loader: TypeScript loader for webpack](https://github.com/TypeStrong/ts-loader) をちゃんと読むと、`configFile` という引数がある。これで webpack でコンパイル時の tsconfig を切り替えられる。
+
+(なお、本記事では開発中の ts-loader では型チェックは不要という立場から `transpileOnly: true` を付けているが、必要な場合は外すように)
+
+デフォルトは ts-node 用に `"module": "commonjs"` としつつ、webpack に渡す設定だけ `"module": "esnext"` としたい。ただし、 `tsconfig.json` は webpack の補完で使われているので、残しておく必要がある。なので、tsconfig.json は起きつつ、それを extends する webpack.tsconfig.js を追加した。
+
+tsconfig.json
+
+```json
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2019",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react"
+  }
+}
+```
+
+webpack.tsconfig.json
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext"
+  }
+}
+```
+
+webpack.config.js
+
+```js
+const path = require("path");
+const HTMLPlugin = require("html-webpack-plugin");
+const WorkerPlugin = require("worker-plugin");
+
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: {
+          loader: "ts-loader",
+          options: {
+            transpileOnly: true,
+            configFile: "webpack.tsconfig.json",
+          },
+        },
+      },
+    ],
+  },
+  resolve: {
+    extensions: [".js", ".ts", ".tsx"],
+  },
+};
+```
+
+## 応用: プロダクションでターゲットを切り替える
+
+動的に `tsconfig.json` を選択することで、 開発中は `target: es2015` でデバッグしやすくし、production のみ `target: es5` するという方法もある。
+
+webpack.tsconfig.prod.json を追加
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "es5",
+    "module": "esnext"
+  }
+}
+```
+
+```js
+// webpack.config.js
+const path = require("path");
+const HTMLPlugin = require("html-webpack-plugin");
+const WorkerPlugin = require("worker-plugin");
+
+module.exports = (_, argv) => {
+  return {
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          use: {
+            loader: "ts-loader",
+            options: {
+              transpileOnly: true,
+              configFile:
+                argv.mode === "production"
+                  ? "webpack.tsconfig.prod.json"
+                  : "webpack.tsconfig.json",
+            },
+          },
+        },
+      ],
+    },
+    resolve: {
+      extensions: [".js", ".ts", ".tsx"],
+    },
+  };
+};
+```
+
+これでプロダクションビルド(`webpack --mode production`) で es5 向けにビルドされるようになった。
