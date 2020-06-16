@@ -1,0 +1,135 @@
+---
+title: ローカル環境で netlify lambda のエミュレータを動かす
+created: 1592279996411
+tags: [netlify]
+---
+
+netlify は雑に作り捨ての作例を置いておくのに便利でよく使っている。このブログも netlify にドメインを設定して動かしている。
+
+そして、あんまり知られていないが、netlify には aws lambda が使えて、これは月当たり 125 万回ほどの無料枠がある。で、これをローカルで動かすための `netilfy-lambda` がある。
+
+これがカジュアルに使えたら便利だと思って、一度素振りしておくことにした。
+
+## netlify-lambda の問題
+
+`netlify-lambda` を使ってみたところ、本当に出来が悪い。ランナーとして、というより、開発用の環境設定の読み取りに謎の処理が多く、勝手にルート要素の `webpack.config.js` を読み取って自分用の `webpack.config.js` を生成して勝手に失敗したり、本番では `/.netlify/functions/<handler>` で動くのに(これもドキュメントのすごくわかりにくいところに書いてある)、そもそも `netlify.toml` に functions の指定ディレクトリを書かせるのに、ターゲットディレクトリの指定が必要だったりと、とにかく暗黙のユースケースを察する必要がある。
+
+公式ドキュメントを読んでも必要な情報がわからない。まず動くサンプルが見当たらず、特定のユースケースのための設定例ばかり引っかかり、普通に動かすのが難しい。
+
+## 結局どうやったか
+
+動くリポジトリ [mizchi/try-netlify-lambda](https://github.com/mizchi/try-netlify-lambda)
+
+- 素朴に `netlify.toml` で `functions = "functions"` を指定
+- `netlify-lambda build` を一切使わず、webpack の `target: "node"` で `functions/api.js` を生成
+- express router で環境ごとのエンドポイントにマウントして、環境差分を吸収
+- デプロイ時は一旦クリーンしてから `netlify deploy --prod` する
+
+### netlify.toml
+
+```
+[build]
+  command = "yarn webpack --config webpack/functions.config.js"
+  publish = "dist"
+  functions = "functions"
+```
+
+### 構成と npm scripts
+
+構成
+
+```
+netlify.toml
+package.json
+tsconfig.js
+webpack.config.js # netlify-lamba 用のダミー
+src/
+├── front
+│   ├── index.html
+│   └── index.ts
+├── functions
+│   └── api.ts
+└── shared
+    └── getApiRoot.ts
+webpack/
+├── front.config.js
+└── functions.config.js
+```
+
+package.json
+
+```json
+  "scripts": {
+    "build": "rimraf functions && rimraf dist && run-s build:*",
+    "build:fns": "webpack --config webpack/functions.config.js --mode production",
+    "build:front": "webpack --config webpack/front.config.js --mode production",
+    "dev": "run-p dev:*",
+    "dev:front": "webpack-dev-server --config webpack/front.config.js -w",
+    "dev:fns": "rimraf functions && run-p dev:fns:*",
+    "dev:fns:webpack": "webpack --config webpack/functions.config.js -w --mode development",
+    "dev:fns:serve": "netlify-lambda serve .",
+    "deploy": "yarn build && netlify deploy --prod"
+  },
+```
+
+(普通に使うだけだったら `dev` と `build`、そして `deploy` だけ叩けば良い)
+
+注意点として、`netlify-lambda serve .` は `functions` を見るが、まずルートの `webpack.config.js` を読んで、 `functions/webpack.config.js` を生成してくる(たぶんオートリロード用?)。このディレクトリをこのままデプロイしようとすると、`webpack.config.js` を functions としてデプロイしようとして、デプロイに失敗する。なので、本番用の `build` では rimraf で `functions` を消している。
+
+なので、netlify-lambda のためのダミーとして、 `module.exports = {}` という空の `webpack.config.js` を置いて、実際に使う webpack.config は `webpack/` ディレクトリに置いた。
+
+ここの挙動を察するのに 4 時間が溶けたので、恨みがある。
+
+### サーバー
+
+↑ の設定で、netlify-lambda の開発用のエミュレータは `localhost:9000/<handler>`、本番は `/.netlify/functions/<handler>` で起動する。
+これを express.Router のマウント位置で辻褄を合わせる。
+
+AWS Lambda では、 node の http ではなく、lambda 独自の http.Request/Response が来るため、 `serverless-http` を通して express に食わせる。
+
+```ts
+// src/functions/api.ts
+
+import express from "express";
+import serverless from "serverless-http";
+
+const isProd = process.env.NODE === "production";
+
+const app = express();
+const router = express.Router();
+
+// 開発時には CORS になるので開けておく
+router.use((_req, res, next) => {
+  if (!isProd) {
+    res.header("Access-Control-Allow-Origin", "*");
+  }
+  next();
+});
+
+router.get<{ id: string }>("/:id", (req, res) => {
+  res.send("ok " + req.params.id);
+});
+
+const apiRoot =
+  process.env.NODE_ENV === "production" ? "/.netlify/functions/api" : "/api";
+app.use(apiRoot, router);
+
+exports.handler = serverless(app);
+```
+
+クライアントからも環境変数を見て辻褄を合わせてリクエストする。
+
+```ts
+const API_ROOT =
+  process.env.NODE_ENV === "production"
+    ? "/.netlify/functions"
+    : "http://localhost:9000";
+
+fetch(API_ROOT + "/api/foo").then(() => {...});
+```
+
+## 結果
+
+動いた
+
+https://heuristic-keller-8c2758.netlify.app/
