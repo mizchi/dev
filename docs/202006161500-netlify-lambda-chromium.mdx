@@ -1,0 +1,84 @@
+---
+title: netlify-lambda で puppeteer を起動する
+created: 1592287218672
+tags: [netlify, puppeteer]
+---
+
+[ローカル環境で netlify lambda のエミュレータを動かす \- mizdev](https://mizchi.dev/202006161259-try-netlify-lambda) を読んでることが前提
+
+## tldr
+
+- netlify-lambda は aws lambda なので、AWS 用にビルドされた chrome が使える
+- ローカル開発環境では素の puppeteer にフォールバックする
+
+## コード
+
+```
+yarn add puppeteer chrome-aws-lambda
+```
+
+webpack.config.js の `externals` でビルドしないように指定。
+
+```js
+// webpack.config.js
+  externals: {
+    puppeteer: "puppeteer",
+    "chrome-aws-lambda": "chrome-aws-lambda",
+    lambdafs: "lambdafs",
+  },
+```
+
+(`functions/api.js` にビルドしていたのを `functions/api/index.js` にビルドを変えて、 `functions/api/package.json` に依存を記述した。)
+
+```ts
+// browser.ts
+import puppeteer from "puppeteer";
+
+const isProd = process.env.NODE === "production";
+
+let _browser: null | puppeteer.Browser = null;
+
+export async function getBrowser(): Promise<puppeteer.Browser> {
+  if (_browser) {
+    return _browser;
+  }
+  if (isProd) {
+    const chromium = require("chrome-aws-lambda");
+    const browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
+    });
+    return (_browser = browser);
+  }
+  return (_browser = await puppeteer.launch({
+    headless: true,
+    executablePath:
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  }));
+}
+```
+
+このコードを使う例
+
+```ts
+router.get("/chrome", async (req, res) => {
+  let result = null;
+  let page = null;
+  try {
+    const browser = await getBrowser();
+    page = await browser.newPage();
+    await page.goto("https://google.com");
+    result = await page.title();
+  } catch (error) {
+    return res.status(400).send(error.message);
+  } finally {
+    if (page) {
+      page.close();
+    }
+  }
+  res.send(result);
+});
+```
