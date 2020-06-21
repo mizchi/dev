@@ -1,4 +1,5 @@
 module.exports = {
+  useOgp: true,
   host: "https://mizchi.dev",
   siteName: "mizdev",
   author: "mizchi",
