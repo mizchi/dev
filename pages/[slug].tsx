@@ -10,6 +10,7 @@ type Props = {
   toc: Array<any>;
   history: Array<any>;
   frontmatter: {
+    description?: string;
     title: string;
     created: number;
     tags?: string[];
@@ -54,6 +55,17 @@ export default (props: Props) => (
       <title>
         {props.frontmatter.title} - {ssgConfig.siteName}
       </title>
+      <meta property="og:title" content={props.frontmatter.title} />
+      <meta
+        property="og:description"
+        content={props.frontmatter.description ?? ""}
+      />
+      <meta property="og:url" content={ssgConfig.host + "/" + props.slug} />
+      <meta name="twitter:card" content="summary" />
+      <meta
+        property="og:image"
+        content={ssgConfig.host + "/ogp/" + props.slug + ".png"}
+      />
     </Head>
     <Layout config={ssgConfig}>
       <Article
