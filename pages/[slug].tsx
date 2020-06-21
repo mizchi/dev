@@ -74,6 +74,7 @@ export default (props: Props) => (
         history={props.history}
         toc={props.toc}
         title={props.frontmatter.title}
+        createdAt={props.frontmatter.created}
         tags={props.tags}
       >
         <div
